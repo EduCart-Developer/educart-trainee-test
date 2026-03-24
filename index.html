@@ -632,6 +632,26 @@
 </head>
 <body>
 
+<!-- FULLSCREEN PROMPT -->
+<div class="modal-overlay open" id="fs-prompt">
+  <div class="modal-box" style="max-width:420px">
+    <div style="font-size:36px;margin-bottom:12px">🖥️</div>
+    <div class="modal-title">Fullscreen Required</div>
+    <div class="modal-sub">This assessment must be taken in fullscreen mode. Exiting fullscreen will be recorded as a violation.</div>
+    <button class="btn-modal-confirm" id="btn-enter-fs" style="width:100%">Enter Fullscreen & Begin</button>
+  </div>
+</div>
+
+<!-- FULLSCREEN EXIT WARNING -->
+<div class="modal-overlay" id="fs-warn-overlay">
+  <div class="modal-box" style="border:2px solid #C0392B">
+    <div style="font-size:32px;margin-bottom:8px">⚠️</div>
+    <div class="modal-title" style="color:#C0392B">Fullscreen Exited!</div>
+    <div class="modal-sub">You have exited fullscreen. This violation has been recorded. Please return to fullscreen immediately to continue.</div>
+    <button class="btn-modal-confirm" id="btn-reenter-fs" style="width:100%;background:#C0392B">Return to Fullscreen</button>
+  </div>
+</div>
+
 <!-- LOADING -->
 <div class="loading-overlay" id="loading-overlay">
   <div class="spinner"></div>
@@ -675,7 +695,7 @@
         <div class="field"><label>Full Name</label><input id="inp-name" placeholder="e.g. Priya Sharma" autocomplete="off"></div>
         <div class="field"><label>Email Address</label><input id="inp-email" type="email" placeholder="priya@example.com" autocomplete="off"></div>
         <div class="field"><label>Phone Number</label><input id="inp-phone" type="tel" placeholder="+91 98765 43210" autocomplete="off"></div>
-        <div class="notice">⚠ Tab switching is monitored and recorded. Please do not open other windows or tabs during the test.</div>
+        <div class="notice">⚠ This test runs in <strong>fullscreen mode</strong>. Tab switching, exiting fullscreen, copy-paste, and right-click are all disabled and recorded. Any violation is flagged in the admin report.</div>
         <div class="test-cards" id="test-cards"></div>
         <div class="admin-link"><a href="#" id="goto-admin">Admin Portal →</a></div>
       </div>
@@ -725,7 +745,7 @@
     <div class="done-stats">
       <div class="done-stat"><div class="done-stat-val" id="done-answered">0</div><div class="done-stat-lbl">Answered</div></div>
       <div class="done-stat"><div class="done-stat-val" id="done-time">0m</div><div class="done-stat-lbl">Time taken</div></div>
-      <div class="done-stat"><div class="done-stat-val" id="done-flags">0</div><div class="done-stat-lbl">Flags</div></div>
+      <div class="done-stat"><div class="done-stat-val" id="done-flags">0</div><div class="done-stat-lbl">Violations</div></div>
     </div>
     <button class="btn-back" id="btn-back-home">← Back to Tests</button>
   </div>
@@ -738,10 +758,9 @@
 // ─────────────────────────────────────────────
 // CONFIGURATION — EDIT THESE
 // ─────────────────────────────────────────────
+
 const GOOGLE_SCRIPT_URL = 'https://educar-trainee-test.educart-developer.workers.dev';
 const ADMIN_PASSWORD = 'Educart@2026';
-
-
 
 // ─────────────────────────────────────────────
 // TEST DATA
@@ -872,6 +891,73 @@ function renderHome(){
 }
 
 // ─────────────────────────────────────────────
+// ANTI-CHEAT
+// ─────────────────────────────────────────────
+
+// Show fullscreen prompt on page load
+window.addEventListener('load', () => {
+  $('btn-enter-fs').onclick = () => {
+    const el = document.documentElement;
+    if(el.requestFullscreen) el.requestFullscreen();
+    else if(el.webkitRequestFullscreen) el.webkitRequestFullscreen();
+    $('fs-prompt').classList.remove('open');
+  };
+  $('btn-reenter-fs').onclick = () => {
+    const el = document.documentElement;
+    if(el.requestFullscreen) el.requestFullscreen();
+    else if(el.webkitRequestFullscreen) el.webkitRequestFullscreen();
+    $('fs-warn-overlay').classList.remove('open');
+  };
+});
+
+// Detect fullscreen exit during test
+document.addEventListener('fullscreenchange', onFsChange);
+document.addEventListener('webkitfullscreenchange', onFsChange);
+function onFsChange(){
+  const inFs = !!(document.fullscreenElement || document.webkitFullscreenElement);
+  if(!inFs && $('screen-test').classList.contains('active')){
+    S.tabSwitches++;
+    $('fs-warn-overlay').classList.add('open');
+    const wb = $('warn-banner');
+    if(wb){ wb.style.display='block'; wb.textContent=`⚠ Fullscreen exit detected (${S.tabSwitches}x) — this is recorded.`; }
+  }
+}
+
+// Tab / window switch detection
+function onVisibility(){
+  if(!$('screen-test').classList.contains('active')) return;
+  if(document.hidden){
+    S.tabSwitches++;
+    const wb = $('warn-banner');
+    if(wb){ wb.style.display='block'; wb.textContent=`⚠ Tab switch detected (${S.tabSwitches}x) — this is recorded.`; }
+  }
+}
+
+// Disable right-click globally
+document.addEventListener('contextmenu', e => e.preventDefault());
+
+// Disable copy / cut / paste globally
+document.addEventListener('copy',  e => e.preventDefault());
+document.addEventListener('cut',   e => e.preventDefault());
+document.addEventListener('paste', e => {
+  // Allow paste only inside the answer textarea
+  if(e.target && e.target.id === 'ans-input') return;
+  e.preventDefault();
+});
+
+// Disable keyboard shortcuts for copy/paste/print/devtools
+document.addEventListener('keydown', e => {
+  const ctrl = e.ctrlKey || e.metaKey;
+  if(ctrl && ['c','x','u','s','p','a'].includes(e.key.toLowerCase())) {
+    if(e.key.toLowerCase()==='a' && e.target && e.target.id==='ans-input') return;
+    e.preventDefault();
+  }
+  if(e.key==='F12' || (ctrl && e.shiftKey && ['i','j','c'].includes(e.key.toLowerCase()))) {
+    e.preventDefault();
+  }
+});
+
+// ─────────────────────────────────────────────
 // TEST
 // ─────────────────────────────────────────────
 function startTest(id){
@@ -883,15 +969,6 @@ function startTest(id){
   renderQ();
   startTimer();
   document.addEventListener('visibilitychange', onVisibility);
-}
-
-function onVisibility(){
-  if(document.hidden && !$('screen-test').classList.contains('active')) return;
-  if(document.hidden){
-    S.tabSwitches++;
-    $('warn-banner').style.display='block';
-    $('warn-banner').textContent = `⚠ Tab switch detected (${S.tabSwitches}x) — this is recorded.`;
-  }
 }
 
 function renderQ(){
