@@ -1,0 +1,1121 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Educart BDM Assessment Portal</title>
+<link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display:ital@0;1&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #F7F5F0;
+    --surface: #FFFFFF;
+    --surface2: #F0EDE6;
+    --brand: #1A3A2A;
+    --brand2: #2D6A4F;
+    --accent: #E8A020;
+    --accent2: #F5C842;
+    --text: #1A1A1A;
+    --text2: #555550;
+    --text3: #999990;
+    --border: rgba(26,58,42,0.12);
+    --border2: rgba(26,58,42,0.22);
+    --red: #C0392B;
+    --green: #1A6B3A;
+    --radius: 12px;
+    --radius-sm: 8px;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  html { scroll-behavior: smooth; }
+  body {
+    font-family: 'DM Sans', sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    min-height: 100vh;
+    font-size: 15px;
+    line-height: 1.6;
+  }
+
+  /* ─── SCREENS ─── */
+  .screen { display: none; min-height: 100vh; }
+  .screen.active { display: block; }
+
+  /* ─── HOME ─── */
+  #screen-home {
+    background: var(--bg);
+    position: relative;
+    overflow: hidden;
+  }
+  .home-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    min-height: 100vh;
+  }
+  .home-left {
+    background: var(--brand);
+    padding: 3rem;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    position: relative;
+    overflow: hidden;
+  }
+  .home-left::before {
+    content: '';
+    position: absolute;
+    width: 400px; height: 400px;
+    border-radius: 50%;
+    background: rgba(232,160,32,0.08);
+    top: -100px; right: -100px;
+  }
+  .home-left::after {
+    content: '';
+    position: absolute;
+    width: 300px; height: 300px;
+    border-radius: 50%;
+    background: rgba(45,106,79,0.3);
+    bottom: -80px; left: -80px;
+  }
+  .brand-mark {
+    font-family: 'DM Serif Display', serif;
+    font-size: 28px;
+    color: var(--accent2);
+    letter-spacing: -0.5px;
+  }
+  .brand-sub { font-size: 12px; color: rgba(255,255,255,0.45); letter-spacing: 0.1em; text-transform: uppercase; margin-top: 4px; }
+  .home-hero { position: relative; z-index: 1; }
+  .home-hero h1 {
+    font-family: 'DM Serif Display', serif;
+    font-size: clamp(36px, 4vw, 52px);
+    color: #fff;
+    line-height: 1.1;
+    margin-bottom: 1rem;
+  }
+  .home-hero h1 em { font-style: italic; color: var(--accent2); }
+  .home-hero p { color: rgba(255,255,255,0.6); font-size: 15px; max-width: 340px; line-height: 1.7; }
+  .home-stats { display: flex; gap: 2rem; position: relative; z-index: 1; }
+  .stat-item { }
+  .stat-num { font-family: 'DM Serif Display', serif; font-size: 32px; color: var(--accent2); }
+  .stat-lbl { font-size: 12px; color: rgba(255,255,255,0.45); letter-spacing: 0.05em; text-transform: uppercase; }
+
+  .home-right {
+    padding: 3rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: var(--bg);
+  }
+  .home-form-card {
+    width: 100%;
+    max-width: 440px;
+  }
+  .form-title { font-family: 'DM Serif Display', serif; font-size: 26px; color: var(--brand); margin-bottom: 6px; }
+  .form-sub { font-size: 13px; color: var(--text3); margin-bottom: 2rem; }
+  .field { margin-bottom: 1rem; }
+  .field label { display: block; font-size: 12px; font-weight: 600; color: var(--brand); text-transform: uppercase; letter-spacing: 0.06em; margin-bottom: 6px; }
+  .field input {
+    width: 100%;
+    padding: 12px 16px;
+    border: 1px solid var(--border2);
+    border-radius: var(--radius-sm);
+    font-family: 'DM Sans', sans-serif;
+    font-size: 15px;
+    background: var(--surface);
+    color: var(--text);
+    outline: none;
+    transition: border-color 0.2s, box-shadow 0.2s;
+  }
+  .field input:focus { border-color: var(--brand2); box-shadow: 0 0 0 3px rgba(45,106,79,0.1); }
+  .notice {
+    background: #FFF8E6;
+    border: 1px solid rgba(232,160,32,0.3);
+    border-radius: var(--radius-sm);
+    padding: 10px 14px;
+    font-size: 12px;
+    color: #7A5010;
+    margin-bottom: 1.5rem;
+    line-height: 1.5;
+  }
+  .test-cards { display: grid; gap: 10px; margin-top: 1.5rem; }
+  .test-card {
+    display: flex; align-items: center; justify-content: space-between;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 14px 16px;
+    cursor: pointer;
+    transition: all 0.2s;
+  }
+  .test-card:hover { border-color: var(--brand2); box-shadow: 0 4px 20px rgba(26,58,42,0.1); transform: translateY(-1px); }
+  .test-card-left { display: flex; align-items: center; gap: 12px; }
+  .test-num {
+    width: 36px; height: 36px;
+    border-radius: 50%;
+    display: flex; align-items: center; justify-content: center;
+    font-weight: 600; font-size: 14px;
+    flex-shrink: 0;
+  }
+  .t1 { background: #E8F4FD; color: #1A5A8A; }
+  .t2 { background: #FFF3E0; color: #8A4A1A; }
+  .t3 { background: #E8F5E9; color: #1A5A2A; }
+  .t4 { background: #FCE4EC; color: #8A1A3A; }
+  .test-card-info { }
+  .test-card-title { font-size: 13px; font-weight: 600; color: var(--text); }
+  .test-card-meta { font-size: 11px; color: var(--text3); margin-top: 2px; }
+  .btn-start {
+    background: var(--brand);
+    color: #fff;
+    border: none;
+    border-radius: var(--radius-sm);
+    padding: 8px 16px;
+    font-family: 'DM Sans', sans-serif;
+    font-size: 13px;
+    font-weight: 500;
+    cursor: pointer;
+    transition: background 0.2s;
+    white-space: nowrap;
+  }
+  .btn-start:hover { background: var(--brand2); }
+  .admin-link {
+    text-align: center;
+    margin-top: 1.5rem;
+    font-size: 12px;
+    color: var(--text3);
+  }
+  .admin-link a { color: var(--brand2); text-decoration: none; font-weight: 500; }
+  .admin-link a:hover { text-decoration: underline; }
+
+  /* ─── TEST SCREEN ─── */
+  #screen-test {
+    display: none;
+    background: var(--bg);
+  }
+  #screen-test.active { display: flex; flex-direction: column; }
+  .test-topbar {
+    background: var(--brand);
+    color: #fff;
+    padding: 0 2rem;
+    height: 60px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    position: sticky;
+    top: 0;
+    z-index: 100;
+  }
+  .topbar-brand { font-family: 'DM Serif Display', serif; font-size: 18px; color: var(--accent2); }
+  .topbar-info { font-size: 13px; color: rgba(255,255,255,0.6); }
+  .topbar-right { display: flex; align-items: center; gap: 16px; }
+  .timer {
+    background: rgba(255,255,255,0.1);
+    border: 1px solid rgba(255,255,255,0.2);
+    border-radius: var(--radius-sm);
+    padding: 6px 14px;
+    font-size: 18px;
+    font-weight: 600;
+    font-variant-numeric: tabular-nums;
+    letter-spacing: 0.05em;
+    color: #fff;
+    min-width: 80px;
+    text-align: center;
+    transition: background 0.3s;
+  }
+  .timer.urgent { background: rgba(192,57,43,0.6); border-color: rgba(192,57,43,0.8); }
+  .progress-bar { height: 3px; background: var(--surface2); }
+  .progress-fill { height: 100%; background: linear-gradient(90deg, var(--brand2), var(--accent)); transition: width 0.4s; }
+  .test-body { flex: 1; padding: 2rem; max-width: 800px; margin: 0 auto; width: 100%; }
+  .warn-banner {
+    background: #FFF3E0;
+    border: 1px solid rgba(232,160,32,0.4);
+    border-radius: var(--radius-sm);
+    padding: 10px 14px;
+    font-size: 13px;
+    color: #7A5010;
+    margin-bottom: 1rem;
+    display: none;
+    font-weight: 500;
+  }
+  .q-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem; }
+  .q-counter { font-size: 13px; color: var(--text3); }
+  .q-type-badge {
+    font-size: 11px; font-weight: 600;
+    padding: 3px 10px;
+    border-radius: 50px;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+  }
+  .q-type-long { background: #E8F4FD; color: #1A5A8A; }
+  .q-type-short { background: #E8F5E9; color: #1A5A2A; }
+  .question-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 2rem;
+    margin-bottom: 1.5rem;
+  }
+  .q-text {
+    font-size: 17px;
+    color: var(--text);
+    line-height: 1.7;
+    margin-bottom: 1.5rem;
+    font-weight: 400;
+  }
+  .q-hint { font-size: 12px; color: var(--text3); margin-bottom: 10px; font-style: italic; }
+  .answer-area {
+    width: 100%;
+    min-height: 160px;
+    border: 1px solid var(--border2);
+    border-radius: var(--radius-sm);
+    padding: 14px 16px;
+    font-family: 'DM Sans', sans-serif;
+    font-size: 15px;
+    color: var(--text);
+    background: var(--bg);
+    resize: vertical;
+    outline: none;
+    transition: border-color 0.2s, box-shadow 0.2s;
+    line-height: 1.7;
+  }
+  .answer-area:focus { border-color: var(--brand2); box-shadow: 0 0 0 3px rgba(45,106,79,0.1); }
+  .word-count { font-size: 11px; color: var(--text3); margin-top: 6px; text-align: right; }
+  .q-nav-row { display: flex; justify-content: space-between; align-items: center; gap: 10px; }
+  .btn-nav {
+    background: var(--surface);
+    border: 1px solid var(--border2);
+    border-radius: var(--radius-sm);
+    padding: 10px 20px;
+    font-family: 'DM Sans', sans-serif;
+    font-size: 14px;
+    font-weight: 500;
+    cursor: pointer;
+    color: var(--text);
+    transition: all 0.2s;
+  }
+  .btn-nav:hover:not(:disabled) { background: var(--surface2); border-color: var(--brand2); }
+  .btn-nav:disabled { opacity: 0.4; cursor: not-allowed; }
+  .btn-nav-primary {
+    background: var(--brand);
+    color: #fff;
+    border: none;
+  }
+  .btn-nav-primary:hover { background: var(--brand2) !important; }
+  .btn-nav-danger {
+    background: transparent;
+    border: 1px solid rgba(192,57,43,0.3);
+    color: var(--red);
+  }
+  .btn-nav-danger:hover { background: rgba(192,57,43,0.06) !important; }
+  .q-dots { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 1rem; }
+  .q-dot {
+    width: 28px; height: 28px;
+    border-radius: 50%;
+    border: 1.5px solid var(--border2);
+    background: var(--surface);
+    font-size: 11px;
+    font-weight: 600;
+    cursor: pointer;
+    display: flex; align-items: center; justify-content: center;
+    color: var(--text2);
+    transition: all 0.15s;
+  }
+  .q-dot:hover { border-color: var(--brand2); color: var(--brand2); }
+  .q-dot.answered { background: var(--brand); border-color: var(--brand); color: #fff; }
+  .q-dot.current { border-color: var(--accent); background: rgba(232,160,32,0.1); color: var(--brand); }
+
+  /* ─── DONE ─── */
+  #screen-done {
+    background: var(--bg);
+    display: none;
+    align-items: center;
+    justify-content: center;
+    padding: 2rem;
+  }
+  #screen-done.active { display: flex; }
+  .done-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 20px;
+    padding: 3rem;
+    text-align: center;
+    max-width: 500px;
+    width: 100%;
+  }
+  .done-icon {
+    width: 72px; height: 72px;
+    background: #E8F5E9;
+    border-radius: 50%;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 32px;
+    margin: 0 auto 1.5rem;
+  }
+  .done-title { font-family: 'DM Serif Display', serif; font-size: 28px; color: var(--brand); margin-bottom: 8px; }
+  .done-sub { color: var(--text2); font-size: 14px; line-height: 1.7; margin-bottom: 2rem; }
+  .done-stats { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 12px; margin-bottom: 2rem; }
+  .done-stat { background: var(--bg); border-radius: var(--radius-sm); padding: 1rem; }
+  .done-stat-val { font-size: 24px; font-weight: 600; color: var(--brand); }
+  .done-stat-lbl { font-size: 11px; color: var(--text3); text-transform: uppercase; letter-spacing: 0.05em; margin-top: 2px; }
+  .btn-back {
+    background: var(--brand);
+    color: #fff;
+    border: none;
+    border-radius: var(--radius-sm);
+    padding: 12px 28px;
+    font-family: 'DM Sans', sans-serif;
+    font-size: 15px;
+    font-weight: 500;
+    cursor: pointer;
+    transition: background 0.2s;
+    width: 100%;
+  }
+  .btn-back:hover { background: var(--brand2); }
+
+  /* ─── ADMIN ─── */
+  #screen-admin { background: var(--bg); display: none; }
+  #screen-admin.active { display: block; }
+  .admin-header {
+    background: var(--brand);
+    padding: 1rem 2rem;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+  }
+  .admin-header-title { font-family: 'DM Serif Display', serif; font-size: 20px; color: var(--accent2); }
+  .btn-exit {
+    background: rgba(255,255,255,0.1);
+    border: 1px solid rgba(255,255,255,0.2);
+    color: #fff;
+    padding: 6px 16px;
+    border-radius: var(--radius-sm);
+    font-size: 13px;
+    cursor: pointer;
+    font-family: 'DM Sans', sans-serif;
+    transition: background 0.2s;
+  }
+  .btn-exit:hover { background: rgba(255,255,255,0.2); }
+  .admin-body { padding: 2rem; max-width: 1000px; margin: 0 auto; }
+  .admin-metrics { display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; margin-bottom: 2rem; }
+  .admin-metric { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); padding: 1.25rem; }
+  .admin-metric-val { font-family: 'DM Serif Display', serif; font-size: 32px; color: var(--brand); }
+  .admin-metric-lbl { font-size: 12px; color: var(--text3); text-transform: uppercase; letter-spacing: 0.05em; margin-top: 4px; }
+  .section-title { font-size: 13px; font-weight: 600; color: var(--text3); text-transform: uppercase; letter-spacing: 0.08em; margin-bottom: 12px; }
+  .response-row {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 14px 18px;
+    margin-bottom: 8px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+  }
+  .resp-name { font-weight: 600; font-size: 14px; color: var(--text); }
+  .resp-meta { font-size: 12px; color: var(--text3); margin-top: 2px; }
+  .resp-tags { display: flex; gap: 6px; align-items: center; flex-wrap: wrap; }
+  .tag {
+    font-size: 11px;
+    font-weight: 600;
+    padding: 3px 10px;
+    border-radius: 50px;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+  }
+  .tag-t1 { background: #E8F4FD; color: #1A5A8A; }
+  .tag-t2 { background: #FFF3E0; color: #8A4A1A; }
+  .tag-t3 { background: #E8F5E9; color: #1A5A2A; }
+  .tag-t4 { background: #FCE4EC; color: #8A1A3A; }
+  .tag-flag { background: #FDEDEC; color: #A32D2D; }
+  .tag-clean { background: #E8F5E9; color: #1A6B3A; }
+  .btn-review {
+    background: var(--brand);
+    color: #fff;
+    border: none;
+    border-radius: var(--radius-sm);
+    padding: 7px 16px;
+    font-size: 12px;
+    font-family: 'DM Sans', sans-serif;
+    font-weight: 500;
+    cursor: pointer;
+    white-space: nowrap;
+    transition: background 0.2s;
+  }
+  .btn-review:hover { background: var(--brand2); }
+  .empty-state { text-align: center; padding: 4rem 2rem; color: var(--text3); }
+  .empty-state p { font-size: 15px; margin-top: 8px; }
+
+  /* ─── DETAIL VIEW ─── */
+  .detail-topbar {
+    background: var(--surface);
+    border-bottom: 1px solid var(--border);
+    padding: 1rem 2rem;
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    position: sticky;
+    top: 0;
+    z-index: 10;
+  }
+  .detail-body { padding: 2rem; max-width: 860px; margin: 0 auto; }
+  .detail-meta-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 1.5rem;
+    margin-bottom: 1.5rem;
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 1rem;
+  }
+  .dm-item-lbl { font-size: 11px; text-transform: uppercase; letter-spacing: 0.06em; color: var(--text3); font-weight: 600; margin-bottom: 4px; }
+  .dm-item-val { font-size: 15px; color: var(--text); font-weight: 500; }
+  .qa-block {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 1.5rem;
+    margin-bottom: 12px;
+  }
+  .qa-q-num { font-size: 11px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.06em; color: var(--text3); margin-bottom: 8px; }
+  .qa-question {
+    font-size: 14px;
+    color: var(--text2);
+    background: var(--bg);
+    border-radius: var(--radius-sm);
+    padding: 12px 16px;
+    margin-bottom: 12px;
+    line-height: 1.6;
+    border-left: 3px solid var(--brand2);
+  }
+  .qa-ans-lbl { font-size: 11px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.06em; color: var(--brand2); margin-bottom: 8px; }
+  .qa-answer {
+    font-size: 14px;
+    line-height: 1.75;
+    color: var(--text);
+    white-space: pre-wrap;
+    padding: 12px 16px;
+    background: var(--bg);
+    border-radius: var(--radius-sm);
+    margin-bottom: 12px;
+  }
+  .qa-empty { color: var(--text3); font-style: italic; font-size: 13px; }
+  .notes-lbl { font-size: 11px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.06em; color: var(--text3); margin-bottom: 6px; margin-top: 12px; }
+  .notes-input {
+    width: 100%;
+    min-height: 70px;
+    border: 1px solid var(--border2);
+    border-radius: var(--radius-sm);
+    padding: 10px 14px;
+    font-family: 'DM Sans', sans-serif;
+    font-size: 13px;
+    color: var(--text);
+    background: var(--bg);
+    resize: vertical;
+    outline: none;
+    transition: border-color 0.2s;
+  }
+  .notes-input:focus { border-color: var(--brand2); }
+  .btn-save-notes {
+    background: var(--brand);
+    color: #fff;
+    border: none;
+    border-radius: var(--radius-sm);
+    padding: 10px 24px;
+    font-family: 'DM Sans', sans-serif;
+    font-size: 14px;
+    font-weight: 500;
+    cursor: pointer;
+    transition: background 0.2s;
+    margin-top: 1rem;
+  }
+  .btn-save-notes:hover { background: var(--brand2); }
+
+  /* ─── ADMIN LOGIN ─── */
+  .admin-login-wrap {
+    min-height: 100vh;
+    display: flex; align-items: center; justify-content: center;
+    background: var(--bg);
+    padding: 2rem;
+  }
+  .admin-login-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 20px;
+    padding: 2.5rem;
+    max-width: 380px;
+    width: 100%;
+    text-align: center;
+  }
+  .login-logo { font-family: 'DM Serif Display', serif; font-size: 24px; color: var(--brand); margin-bottom: 4px; }
+  .login-sub { font-size: 13px; color: var(--text3); margin-bottom: 2rem; }
+  .btn-login {
+    background: var(--brand);
+    color: #fff;
+    border: none;
+    border-radius: var(--radius-sm);
+    padding: 12px;
+    font-family: 'DM Sans', sans-serif;
+    font-size: 15px;
+    font-weight: 500;
+    cursor: pointer;
+    width: 100%;
+    transition: background 0.2s;
+    margin-top: 10px;
+  }
+  .btn-login:hover { background: var(--brand2); }
+  .login-err { color: var(--red); font-size: 13px; margin-top: 8px; display: none; }
+
+  /* ─── SUBMIT MODAL ─── */
+  .modal-overlay {
+    position: fixed; inset: 0;
+    background: rgba(0,0,0,0.45);
+    display: none;
+    align-items: center;
+    justify-content: center;
+    z-index: 999;
+    padding: 1rem;
+  }
+  .modal-overlay.open { display: flex; }
+  .modal-box {
+    background: var(--surface);
+    border-radius: 16px;
+    padding: 2rem;
+    max-width: 400px;
+    width: 100%;
+    text-align: center;
+  }
+  .modal-title { font-family: 'DM Serif Display', serif; font-size: 22px; color: var(--brand); margin-bottom: 8px; }
+  .modal-sub { font-size: 14px; color: var(--text2); margin-bottom: 1.5rem; line-height: 1.6; }
+  .modal-btns { display: flex; gap: 10px; }
+  .btn-modal-cancel {
+    flex: 1; padding: 11px; border: 1px solid var(--border2); border-radius: var(--radius-sm);
+    font-family: 'DM Sans', sans-serif; font-size: 14px; cursor: pointer;
+    background: transparent; color: var(--text);
+    transition: background 0.2s;
+  }
+  .btn-modal-cancel:hover { background: var(--surface2); }
+  .btn-modal-confirm {
+    flex: 1; padding: 11px; border: none; border-radius: var(--radius-sm);
+    font-family: 'DM Sans', sans-serif; font-size: 14px; font-weight: 500; cursor: pointer;
+    background: var(--brand); color: #fff;
+    transition: background 0.2s;
+  }
+  .btn-modal-confirm:hover { background: var(--brand2); }
+
+  /* ─── LOADING ─── */
+  .loading-overlay {
+    position: fixed; inset: 0;
+    background: rgba(247,245,240,0.92);
+    display: none;
+    align-items: center; justify-content: center;
+    z-index: 9999;
+    flex-direction: column; gap: 12px;
+    font-size: 15px; color: var(--text2);
+  }
+  .loading-overlay.open { display: flex; }
+  .spinner {
+    width: 32px; height: 32px;
+    border: 3px solid var(--border2);
+    border-top-color: var(--brand);
+    border-radius: 50%;
+    animation: spin 0.7s linear infinite;
+  }
+  @keyframes spin { to { transform: rotate(360deg); } }
+
+  @media (max-width: 768px) {
+    .home-grid { grid-template-columns: 1fr; }
+    .home-left { padding: 2rem; min-height: 280px; }
+    .home-right { padding: 1.5rem; }
+    .admin-metrics { grid-template-columns: 1fr 1fr; }
+    .detail-meta-card { grid-template-columns: 1fr 1fr; }
+    .done-stats { grid-template-columns: 1fr; }
+  }
+</style>
+</head>
+<body>
+
+<!-- LOADING -->
+<div class="loading-overlay" id="loading-overlay">
+  <div class="spinner"></div>
+  <div id="loading-msg">Submitting your responses...</div>
+</div>
+
+<!-- MODAL -->
+<div class="modal-overlay" id="modal">
+  <div class="modal-box">
+    <div class="modal-title" id="modal-title">Submit Test?</div>
+    <div class="modal-sub" id="modal-sub">You cannot change your answers after submission. Make sure you've answered all questions.</div>
+    <div class="modal-btns">
+      <button class="btn-modal-cancel" id="modal-cancel">Go back</button>
+      <button class="btn-modal-confirm" id="modal-confirm">Yes, submit</button>
+    </div>
+  </div>
+</div>
+
+<!-- HOME -->
+<div class="screen active" id="screen-home">
+  <div class="home-grid">
+    <div class="home-left">
+      <div>
+        <div class="brand-mark">Educart</div>
+        <div class="brand-sub">BDM Assessment Portal</div>
+      </div>
+      <div class="home-hero">
+        <h1>Field <em>Readiness</em><br>Test Series</h1>
+        <p>4 structured assessments covering product knowledge, objection handling, academic structure, and education policy.</p>
+      </div>
+      <div class="home-stats">
+        <div class="stat-item"><div class="stat-num">4</div><div class="stat-lbl">Tests</div></div>
+        <div class="stat-item"><div class="stat-num">39</div><div class="stat-lbl">Questions</div></div>
+        <div class="stat-item"><div class="stat-num">45<span style="font-size:20px">min</span></div><div class="stat-lbl">Per test</div></div>
+      </div>
+    </div>
+    <div class="home-right">
+      <div class="home-form-card">
+        <div class="form-title">Start Your Assessment</div>
+        <div class="form-sub">Enter your details, then choose a test to begin.</div>
+        <div class="field"><label>Full Name</label><input id="inp-name" placeholder="e.g. Priya Sharma" autocomplete="off"></div>
+        <div class="field"><label>Email Address</label><input id="inp-email" type="email" placeholder="priya@example.com" autocomplete="off"></div>
+        <div class="field"><label>Phone Number</label><input id="inp-phone" type="tel" placeholder="+91 98765 43210" autocomplete="off"></div>
+        <div class="notice">⚠ Tab switching is monitored and recorded. Please do not open other windows or tabs during the test.</div>
+        <div class="test-cards" id="test-cards"></div>
+        <div class="admin-link"><a href="#" id="goto-admin">Admin Portal →</a></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- TEST -->
+<div class="screen" id="screen-test">
+  <div class="test-topbar">
+    <div>
+      <div class="topbar-brand">Educart</div>
+      <div class="topbar-info" id="topbar-info"></div>
+    </div>
+    <div class="topbar-right">
+      <div class="timer" id="timer">45:00</div>
+    </div>
+  </div>
+  <div class="progress-bar"><div class="progress-fill" id="progress-fill" style="width:0%"></div></div>
+  <div class="test-body">
+    <div class="warn-banner" id="warn-banner"></div>
+    <div class="q-dots" id="q-dots"></div>
+    <div class="q-header">
+      <div class="q-counter" id="q-counter"></div>
+      <div class="q-type-badge" id="q-type-badge"></div>
+    </div>
+    <div class="question-card">
+      <div class="q-text" id="q-text"></div>
+      <div class="q-hint" id="q-hint"></div>
+      <textarea class="answer-area" id="ans-input" placeholder="Write your answer here..."></textarea>
+      <div class="word-count" id="word-count">0 words</div>
+    </div>
+    <div class="q-nav-row">
+      <button class="btn-nav" id="btn-prev">← Previous</button>
+      <button class="btn-nav btn-nav-danger" id="btn-submit-early">Submit Test</button>
+      <button class="btn-nav btn-nav-primary" id="btn-next">Save & Next →</button>
+    </div>
+  </div>
+</div>
+
+<!-- DONE -->
+<div class="screen" id="screen-done">
+  <div class="done-card">
+    <div class="done-icon">✓</div>
+    <div class="done-title">Test Submitted!</div>
+    <div class="done-sub" id="done-sub">Your responses have been recorded and will be reviewed by the Educart team.</div>
+    <div class="done-stats">
+      <div class="done-stat"><div class="done-stat-val" id="done-answered">0</div><div class="done-stat-lbl">Answered</div></div>
+      <div class="done-stat"><div class="done-stat-val" id="done-time">0m</div><div class="done-stat-lbl">Time taken</div></div>
+      <div class="done-stat"><div class="done-stat-val" id="done-flags">0</div><div class="done-stat-lbl">Flags</div></div>
+    </div>
+    <button class="btn-back" id="btn-back-home">← Back to Tests</button>
+  </div>
+</div>
+
+<!-- ADMIN -->
+<div class="screen" id="screen-admin"></div>
+
+<script>
+// ─────────────────────────────────────────────
+// CONFIGURATION — EDIT THESE
+// ─────────────────────────────────────────────
+const GOOGLE_SCRIPT_URL = 'https://educar-trainee-test.educart-developer.workers.dev';
+const ADMIN_PASSWORD = 'Educart@2026';
+
+
+
+// ─────────────────────────────────────────────
+// TEST DATA
+// ─────────────────────────────────────────────
+const TESTS = [
+  {
+    id:1, title:'QB Readiness & Product Knowledge',
+    color:'t1', duration:45,
+    questions:[
+      {id:'1a',text:'Why is the 2026–27 CBSE exam pattern different from previous years? Explain in simple language.',type:'long',hint:'Think about competency-based learning, pattern changes.'},
+      {id:'1b',text:"What does '50% competency-based questions' actually mean for a student preparing for boards?",type:'long',hint:'Focus on what this change means practically for students.'},
+      {id:'1c',text:'Explain the difference between a Textbook, a Reference Book, and a Question Bank.',type:'long',hint:'Think about purpose, usage, and who uses each.'},
+      {id:'1d',text:"Why is it called a Question 'Bank'? What is the analogy behind the name?",type:'short',hint:'Brief and crisp — 3–4 sentences is enough.'},
+      {id:'1e',text:'Why do traditional books fail in 2026–27 even if they were successful in earlier years?',type:'long',hint:'Connect to the pattern change.'},
+      {id:'1f',text:"A teacher says: 'NCERT is enough. Why extra books?' How do you respond?",type:'long',hint:'Be persuasive but respectful.'},
+      {id:'1g',text:'Differentiate between NCERT, RD Sharma, and Educart Question Bank. What is each best suited for?',type:'long',hint:'Use a comparison approach.'},
+      {id:'1h',text:'Give a 1-minute pitch on the Educart Question Bank (write it as you would speak it).',type:'long',hint:'Write naturally, as if speaking to a teacher.'},
+      {id:'1i',text:'What are the key parameters to evaluate a good academic book?',type:'long',hint:'Think about what a teacher or parent would look for.'},
+      {id:'1j',text:'What specific problem does the Educart QB solve for board exam preparation?',type:'short',hint:'Be direct and concise.'},
+    ]
+  },
+  {
+    id:2, title:'Scenario Handling & Objection Management',
+    color:'t2', duration:45,
+    questions:[
+      {id:'2a',text:"[Scenario 1 – Resistant Teacher] A teacher says: 'We already use RD Sharma for Maths. Students are doing fine.' List 5 questions you would ask this teacher at the school.",type:'long',hint:'Use open-ended questions to uncover pain points.'},
+      {id:'2b',text:'[Scenario 1 continued] How would you reposition Educart QB against RD Sharma to this teacher?',type:'long',hint:'Focus on what QB offers that RD Sharma does not in the new pattern.'},
+      {id:'2c',text:"[Scenario 2 – Objection] Teacher asks: 'What are the unique features / USPs of your QB?' Write your answer.",type:'long',hint:'Be specific — features, not just benefits.'},
+      {id:'2d',text:"[Scenario 2 continued] Teacher asks: 'How can I review the answers attempted by toppers?' What do you say?",type:'short',hint:'Quick and factual.'},
+      {id:'2e',text:"[Scenario 2 continued] Teacher says: 'I have too many books from other publishers. Not required.' How do you respond?",type:'long',hint:'Acknowledge, then differentiate.'},
+      {id:'2f',text:"[Scenario 2 continued] Teacher asks: 'How can I become a part of the specimen program?' Explain the process.",type:'short',hint:'Step by step, keep it simple.'},
+      {id:'2g',text:"[Scenario 3 – Price Objection] Coordinator says: 'Educart is more expensive than local publishers.' Write your full response.",type:'long',hint:'Justify value, not price.'},
+      {id:'2h',text:'[Role Play] You have 5 minutes with the Head of Department. The school currently uses NCERT + Exemplar only. Write your complete 5-minute pitch.',type:'long',hint:'Structure: hook → problem → solution → proof → call to action.'},
+    ]
+  },
+  {
+    id:3, title:'Academic & Board Structure',
+    color:'t3', duration:45,
+    questions:[
+      {id:'3a',text:"'Teachers and schools are the real customers.' How and why — explain this from a sales perspective.",type:'long',hint:'Think about decision-making power in schools.'},
+      {id:'3b',text:'What is the difference between NCERT and CBSE? Many people confuse them — clarify.',type:'short',hint:'Clear, simple, no jargon.'},
+      {id:'3c',text:'Explain the new exam pattern introduced for 2026–27 as per the CBSE update.',type:'long',hint:'Include specifics: MCQs, CBQs, percentages, etc.'},
+      {id:'3d',text:'Explain the academic calendar of a typical CBSE school. What are the key phases?',type:'long',hint:'Think: admissions, syllabus start, mid-terms, boards, summer, repeat.'},
+      {id:'3e',text:'If you had to choose ONE month to maximise Educart book sales, which month and why?',type:'short',hint:'Think about the purchase cycle.'},
+      {id:'3f',text:'What is the difference between a Question Bank (QB) and a One-Shot revision book?',type:'short',hint:'Think purpose, timing, depth.'},
+      {id:'3g',text:"Why is CBSE Educart's core target market? Explain strategically.",type:'long',hint:'Think scale, standardisation, and demand.'},
+      {id:'3h',text:'What are the Go-To-Market (GTM) strategies of Educart? List and explain.',type:'long',hint:'Think channels, partnerships, digital, ground.'},
+      {id:'3i',text:'How can a BDM leverage summer vacation to build strong rapport with teachers? Give a concrete plan.',type:'long',hint:'Be practical — what would you actually do?'},
+      {id:'3j',text:'What happens when a teacher recommends your book in class? Why would a teacher recommend your book? What is more powerful — giving free samples or explaining the content? Why?',type:'long',hint:'Three parts — answer all three.'},
+      {id:'3k',text:'What are the different teacher engagement initiatives taken by Educart?',type:'long',hint:'Include training, awards, content involvement, etc.'},
+      {id:'3l',text:"Describe the 'last 4 months strategy' of an academic year and where Educart takes the lead during this period.",type:'long',hint:'Think: revision season, mock tests, board prep.'},
+    ]
+  },
+  {
+    id:4, title:'NEP, NCF & Education Policy',
+    color:'t4', duration:45,
+    questions:[
+      {id:'4a',text:'What is the full form of NEP and NCF? When were they created?',type:'short',hint:'Factual — be precise.'},
+      {id:'4b',text:'What is the primary aim of NEP 2020 in India? Explain in 4–5 sentences.',type:'long',hint:'Cover the broad vision, not just one point.'},
+      {id:'4c',text:'What is the 5+3+3+4 educational structure model? Explain each stage.',type:'long',hint:'Cover age groups and what each stage focuses on.'},
+      {id:'4d',text:'What is the NIPUN Bharat Mission? What are its objectives?',type:'long',hint:'Focus on foundational literacy and numeracy.'},
+      {id:'4e',text:'What is CPD Training? What are the targets associated with it?',type:'long',hint:'CPD = Continuing Professional Development.'},
+      {id:'4f',text:'How will you use your knowledge of NEP and NCF in your conversations with school leadership? Give 3 examples.',type:'long',hint:'Make it conversational and practical.'},
+      {id:'4g',text:'Connect the following chain and explain each link: Policy → Classroom → Book → Sale/Reference',type:'long',hint:'Show how each stage flows into the next.'},
+      {id:'4h',text:'How does NEP 2020 change the role of a teacher? What new responsibilities does a teacher now have?',type:'long',hint:'Think: facilitator, assessor, co-learner.'},
+      {id:'4i',text:'How do Educart books align with NEP 2020 goals? Give specific examples.',type:'long',hint:'Connect book features to NEP principles.'},
+    ]
+  }
+];
+
+// ─────────────────────────────────────────────
+// STATE
+// ─────────────────────────────────────────────
+let S = {
+  name:'', email:'', phone:'',
+  test: null, qIdx: 0,
+  answers: {}, startTime: null,
+  timerInt: null, timeLeft: 0,
+  tabSwitches: 0,
+  adminAuthed: false,
+  detailId: null,
+};
+
+// ─────────────────────────────────────────────
+// UTILS
+// ─────────────────────────────────────────────
+const $ = id => document.getElementById(id);
+const ft = s => `${Math.floor(s/60)}:${(s%60).toString().padStart(2,'0')}`;
+const wc = t => t.trim() ? t.trim().split(/\s+/).length : 0;
+const showScreen = id => {
+  document.querySelectorAll('.screen').forEach(s=>s.classList.remove('active'));
+  $(id).classList.add('active');
+};
+const getResponses = () => JSON.parse(localStorage.getItem('bdm_resp')||'[]');
+const saveResponses = d => localStorage.setItem('bdm_resp', JSON.stringify(d));
+const loading = (show, msg='Submitting...') => {
+  $('loading-overlay').classList.toggle('open', show);
+  $('loading-msg').textContent = msg;
+};
+
+// ─────────────────────────────────────────────
+// HOME
+// ─────────────────────────────────────────────
+function renderHome(){
+  const tc = $('test-cards');
+  tc.innerHTML = TESTS.map(t=>`
+    <div class="test-card">
+      <div class="test-card-left">
+        <div class="test-num ${t.color}">T${t.id}</div>
+        <div class="test-card-info">
+          <div class="test-card-title">${t.title}</div>
+          <div class="test-card-meta">${t.questions.length} questions · ${t.duration} min</div>
+        </div>
+      </div>
+      <button class="btn-start" data-id="${t.id}">Start →</button>
+    </div>`).join('');
+  tc.querySelectorAll('.btn-start').forEach(b=>{
+    b.onclick = () => {
+      const n = $('inp-name').value.trim();
+      const e = $('inp-email').value.trim();
+      const p = $('inp-phone').value.trim();
+      if(!n||!e) { alert('Please enter your name and email.'); return; }
+      S.name=n; S.email=e; S.phone=p;
+      startTest(+b.dataset.id);
+    };
+  });
+  $('goto-admin').onclick = e => { e.preventDefault(); showAdminLogin(); };
+}
+
+// ─────────────────────────────────────────────
+// TEST
+// ─────────────────────────────────────────────
+function startTest(id){
+  S.test = TESTS.find(t=>t.id===id);
+  S.qIdx = 0; S.answers = {}; S.tabSwitches = 0;
+  S.timeLeft = S.test.duration * 60;
+  S.startTime = Date.now();
+  showScreen('screen-test');
+  renderQ();
+  startTimer();
+  document.addEventListener('visibilitychange', onVisibility);
+}
+
+function onVisibility(){
+  if(document.hidden && !$('screen-test').classList.contains('active')) return;
+  if(document.hidden){
+    S.tabSwitches++;
+    $('warn-banner').style.display='block';
+    $('warn-banner').textContent = `⚠ Tab switch detected (${S.tabSwitches}x) — this is recorded.`;
+  }
+}
+
+function renderQ(){
+  const t = S.test, q = t.questions[S.qIdx], total = t.questions.length;
+  $('topbar-info').textContent = `${t.title} — Q${S.qIdx+1}/${total}`;
+  $('timer').textContent = ft(S.timeLeft);
+  $('progress-fill').style.width = `${((S.qIdx+1)/total)*100}%`;
+  $('q-counter').textContent = `Question ${S.qIdx+1} of ${total}`;
+  $('q-type-badge').textContent = q.type==='long' ? 'Detailed answer' : 'Short answer';
+  $('q-type-badge').className = 'q-type-badge ' + (q.type==='long'?'q-type-long':'q-type-short');
+  $('q-text').textContent = q.text;
+  $('q-hint').textContent = q.hint ? `💡 ${q.hint}` : '';
+  const ans = S.answers[q.id]||'';
+  $('ans-input').value = ans;
+  $('word-count').textContent = `${wc(ans)} words`;
+  $('ans-input').oninput = () => $('word-count').textContent = `${wc($('ans-input').value)} words`;
+  $('btn-prev').disabled = S.qIdx===0;
+  $('btn-next').textContent = S.qIdx===total-1 ? 'Review & Submit' : 'Save & Next →';
+  renderDots();
+}
+
+function renderDots(){
+  const t = S.test;
+  $('q-dots').innerHTML = t.questions.map((q,i)=>`
+    <div class="q-dot ${i===S.qIdx?'current':S.answers[q.id]?'answered':''}" data-i="${i}">${i+1}</div>`).join('');
+  $('q-dots').querySelectorAll('.q-dot').forEach(d=>{
+    d.onclick=()=>{ saveAns(); S.qIdx=+d.dataset.i; renderQ(); };
+  });
+}
+
+function saveAns(){
+  const q = S.test.questions[S.qIdx];
+  S.answers[q.id] = $('ans-input').value;
+}
+
+function startTimer(){
+  clearInterval(S.timerInt);
+  S.timerInt = setInterval(()=>{
+    S.timeLeft--;
+    const el = $('timer');
+    if(el) { el.textContent = ft(S.timeLeft); el.classList.toggle('urgent', S.timeLeft<=300); }
+    if(S.timeLeft<=0){ clearInterval(S.timerInt); doSubmit(true); }
+  },1000);
+}
+
+$('btn-prev').onclick = () => { saveAns(); S.qIdx--; renderQ(); };
+$('btn-next').onclick = () => {
+  saveAns();
+  if(S.qIdx < S.test.questions.length-1){ S.qIdx++; renderQ(); }
+  else showModal('Submit Test?','You cannot change your answers after submission.',()=>doSubmit(false));
+};
+$('btn-submit-early').onclick = () => showModal('Submit early?','Are you sure you want to submit now?',()=>doSubmit(false));
+
+function showModal(title, sub, onConfirm){
+  $('modal-title').textContent = title;
+  $('modal-sub').textContent = sub;
+  $('modal').classList.add('open');
+  $('modal-confirm').onclick = () => { $('modal').classList.remove('open'); onConfirm(); };
+}
+$('modal-cancel').onclick = () => $('modal').classList.remove('open');
+
+async function doSubmit(auto){
+  saveAns();
+  clearInterval(S.timerInt);
+  document.removeEventListener('visibilitychange', onVisibility);
+  const elapsed = Math.round((Date.now()-S.startTime)/1000);
+  const answeredCount = Object.values(S.answers).filter(v=>v.trim()).length;
+  const rec = {
+    id: Date.now(),
+    name: S.name, email: S.email, phone: S.phone,
+    testId: S.test.id, testTitle: S.test.title,
+    answers: {...S.answers},
+    tabSwitches: S.tabSwitches,
+    timeTaken: elapsed,
+    autoSubmit: auto,
+    submittedAt: new Date().toLocaleString('en-IN'),
+    notes: {}
+  };
+  const all = getResponses(); all.push(rec); saveResponses(all);
+  $('done-answered').textContent = answeredCount;
+  $('done-time').textContent = Math.round(elapsed/60) + 'm';
+  $('done-flags').textContent = S.tabSwitches;
+  $('done-sub').textContent = auto
+    ? 'Time ran out — your answers were auto-submitted and recorded.'
+    : 'Your responses have been recorded and will be reviewed by the Educart team.';
+  showScreen('screen-done');
+  sendToGoogleSheets(rec);
+}
+
+async function sendToGoogleSheets(rec){
+  if(GOOGLE_SCRIPT_URL === 'YOUR_GOOGLE_APPS_SCRIPT_URL_HERE') return;
+  try {
+    loading(true, 'Syncing to server...');
+    const flat = { name: rec.name, email: rec.email, phone: rec.phone, testId: rec.testId, testTitle: rec.testTitle, tabSwitches: rec.tabSwitches, timeTaken: rec.timeTaken, autoSubmit: rec.autoSubmit, submittedAt: rec.submittedAt };
+    TESTS.find(t=>t.id===rec.testId).questions.forEach((q,i)=>{ flat[`Q${i+1}`] = rec.answers[q.id]||''; });
+    await fetch(GOOGLE_SCRIPT_URL, { method:'POST', body: JSON.stringify(flat) });
+    loading(false);
+  } catch(e) { loading(false); }
+}
+
+$('btn-back-home').onclick = () => { showScreen('screen-home'); };
+
+// ─────────────────────────────────────────────
+// ADMIN
+// ─────────────────────────────────────────────
+function showAdminLogin(){
+  const s = $('screen-admin');
+  s.innerHTML = `
+    <div class="admin-login-wrap">
+      <div class="admin-login-card">
+        <div class="login-logo">Educart Admin</div>
+        <div class="login-sub">Assessment Portal</div>
+        <div class="field"><input id="admin-pass" type="password" placeholder="Enter admin password"></div>
+        <button class="btn-login" id="btn-admin-login">Login</button>
+        <div class="login-err" id="login-err">Incorrect password.</div>
+        <div style="margin-top:12px"><a href="#" id="admin-back" style="font-size:13px;color:var(--text3);text-decoration:none">← Back to home</a></div>
+      </div>
+    </div>`;
+  showScreen('screen-admin');
+  $('btn-admin-login').onclick = () => {
+    if($('admin-pass').value === ADMIN_PASSWORD){ S.adminAuthed=true; renderAdmin(); }
+    else { $('login-err').style.display='block'; }
+  };
+  $('admin-pass').onkeydown = e => { if(e.key==='Enter') $('btn-admin-login').click(); };
+  $('admin-back').onclick = e => { e.preventDefault(); showScreen('screen-home'); };
+}
+
+function renderAdmin(){
+  const responses = getResponses();
+  const byEmail = {};
+  responses.forEach(r=>{ const k=r.email||r.name; if(!byEmail[k]) byEmail[k]={name:r.name,email:r.email,phone:r.phone,subs:[]}; byEmail[k].subs.push(r); });
+  const candidates = Object.values(byEmail);
+  const flagged = responses.filter(r=>r.tabSwitches>0).length;
+  const s = $('screen-admin');
+  s.innerHTML = `
+    <div class="admin-header">
+      <div class="admin-header-title">Admin Portal</div>
+      <div style="display:flex;gap:8px">
+        <button class="btn-exit" id="btn-clear-data" style="background:rgba(192,57,43,0.3);border-color:rgba(192,57,43,0.5)">Clear All Data</button>
+        <button class="btn-exit" id="btn-admin-exit">← Exit</button>
+      </div>
+    </div>
+    <div class="admin-body">
+      <div class="admin-metrics">
+        <div class="admin-metric"><div class="admin-metric-val">${responses.length}</div><div class="admin-metric-lbl">Submissions</div></div>
+        <div class="admin-metric"><div class="admin-metric-val">${candidates.length}</div><div class="admin-metric-lbl">Candidates</div></div>
+        <div class="admin-metric"><div class="admin-metric-val">${flagged}</div><div class="admin-metric-lbl">Flagged</div></div>
+        <div class="admin-metric"><div class="admin-metric-val">${responses.filter(r=>r.autoSubmit).length}</div><div class="admin-metric-lbl">Auto-submitted</div></div>
+      </div>
+      <div class="section-title">All Responses</div>
+      ${responses.length===0?`<div class="empty-state"><div style="font-size:40px">📋</div><p>No responses yet. Candidates will appear here after they submit a test.</p></div>`:''}
+      ${responses.slice().reverse().map(r=>`
+        <div class="response-row">
+          <div style="flex:1;min-width:0">
+            <div class="resp-name">${r.name}</div>
+            <div class="resp-meta">${r.email}${r.phone?' · '+r.phone:''} · ${r.submittedAt}</div>
+          </div>
+          <div class="resp-tags">
+            <span class="tag tag-t${r.testId}">Test ${r.testId}</span>
+            ${r.tabSwitches>0?`<span class="tag tag-flag">⚠ ${r.tabSwitches} switch</span>`:`<span class="tag tag-clean">Clean</span>`}
+            ${r.autoSubmit?`<span class="tag" style="background:#FDEDEC;color:#A32D2D">Time out</span>`:''}
+          </div>
+          <button class="btn-review" data-rid="${r.id}">Review →</button>
+        </div>`).join('')}
+    </div>`;
+  $('btn-admin-exit').onclick = () => { S.adminAuthed=false; showScreen('screen-home'); };
+  $('btn-clear-data').onclick = () => {
+    if(confirm('Delete ALL responses? This cannot be undone.')) { localStorage.removeItem('bdm_resp'); renderAdmin(); }
+  };
+  s.querySelectorAll('.btn-review').forEach(b=>{
+    b.onclick = () => renderDetail(+b.dataset.rid);
+  });
+}
+
+function renderDetail(rid){
+  const all = getResponses();
+  const r = all.find(x=>x.id===rid);
+  if(!r) return;
+  const t = TESTS.find(x=>x.id===r.testId);
+  const s = $('screen-admin');
+  s.innerHTML = `
+    <div class="detail-topbar">
+      <button class="btn-exit" id="btn-back-list" style="background:transparent;border-color:var(--border2);color:var(--text)">← All Responses</button>
+      <div style="font-weight:600;font-size:15px">${r.name}</div>
+      <span class="tag ${r.tabSwitches>0?'tag-flag':'tag-clean'}">${r.tabSwitches>0?r.tabSwitches+' tab switch':'Clean'}</span>
+    </div>
+    <div class="detail-body">
+      <div class="detail-meta-card">
+        <div><div class="dm-item-lbl">Test</div><div class="dm-item-val">${r.testTitle}</div></div>
+        <div><div class="dm-item-lbl">Submitted</div><div class="dm-item-val">${r.submittedAt}</div></div>
+        <div><div class="dm-item-lbl">Time taken</div><div class="dm-item-val">${Math.round(r.timeTaken/60)} min ${r.timeTaken%60} sec${r.autoSubmit?' (auto)':''}</div></div>
+        <div><div class="dm-item-lbl">Email</div><div class="dm-item-val">${r.email}</div></div>
+        <div><div class="dm-item-lbl">Phone</div><div class="dm-item-val">${r.phone||'—'}</div></div>
+        <div><div class="dm-item-lbl">Flags</div><div class="dm-item-val" style="color:${r.tabSwitches>0?'var(--red)':'var(--green)'}">${r.tabSwitches>0?r.tabSwitches+' tab switch(es)':'None'}</div></div>
+      </div>
+      ${t.questions.map((q,i)=>`
+        <div class="qa-block" id="qa-${q.id}">
+          <div class="qa-q-num">Question ${i+1} of ${t.questions.length}</div>
+          <div class="qa-question">${q.text}</div>
+          <div class="qa-ans-lbl">Candidate's Answer</div>
+          <div class="qa-answer">${r.answers[q.id]?r.answers[q.id]:'<span class="qa-empty">Not answered</span>'}</div>
+          <div class="notes-lbl">Evaluator Notes</div>
+          <textarea class="notes-input" id="note-${q.id}" placeholder="Add evaluation note, score, or feedback...">${(r.notes&&r.notes[q.id])||''}</textarea>
+        </div>`).join('')}
+      <button class="btn-save-notes" id="btn-save-notes">Save All Notes</button>
+    </div>`;
+  $('btn-back-list').onclick = () => renderAdmin();
+  $('btn-save-notes').onclick = () => {
+    const all2 = getResponses();
+    const idx = all2.findIndex(x=>x.id===rid);
+    if(idx>=0){
+      if(!all2[idx].notes) all2[idx].notes={};
+      t.questions.forEach(q=>{ const el=$('note-'+q.id); if(el) all2[idx].notes[q.id]=el.value; });
+      saveResponses(all2);
+      $('btn-save-notes').textContent='✓ Saved!';
+      setTimeout(()=>$('btn-save-notes').textContent='Save All Notes',2000);
+    }
+  };
+}
+
+// ─────────────────────────────────────────────
+// INIT
+// ─────────────────────────────────────────────
+renderHome();
+</script>
+</body>
+</html>
