@@ -334,7 +334,7 @@ body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--text);min
     </div>
   </div>
   <div class="dash-body">
-    <div class="dash-greeting" id="dash-greeting">Hello, Priya!</div>
+    <div class="dash-greeting" id="dash-greeting">Hello!</div>
     <div class="dash-sub" id="dash-sub-text">Complete all 4 assessments below. Each test can only be attempted once.</div>
     <div class="progress-overview" id="progress-overview"></div>
     <div class="section-title">Your Assessments</div>
@@ -391,10 +391,10 @@ body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--text);min
 
 <script>
 // ─────────────────────────────────────────────
-// CONFIG
+// CONFIG — EDIT THESE TWO LINES
 // ─────────────────────────────────────────────
-const GOOGLE_SCRIPT_URL = 'YOUR_GOOGLE_APPS_SCRIPT_URL_HERE';
-const ADMIN_PASSWORD = 'Educart@2026';
+const GOOGLE_SCRIPT_URL = 'https://educar-trainee-test.educart-developer.workers.dev'; // ← paste your Cloudflare Worker URL
+const ADMIN_PASSWORD    = 'Educart@2026';                      // ← change before going live
 
 // ─────────────────────────────────────────────
 // TEST DATA
@@ -462,28 +462,28 @@ let S = {
 // ─────────────────────────────────────────────
 // STORAGE HELPERS
 // ─────────────────────────────────────────────
-const getUsers    = () => JSON.parse(localStorage.getItem('bdm_users')    || '[]');
-const saveUsers   = d  => localStorage.setItem('bdm_users',    JSON.stringify(d));
-const getResponses= () => JSON.parse(localStorage.getItem('bdm_resp')     || '[]');
-const saveResponses=d  => localStorage.setItem('bdm_resp',     JSON.stringify(d));
-const getSession  = () => JSON.parse(localStorage.getItem('bdm_session')  || 'null');
-const saveSession = d  => localStorage.setItem('bdm_session',  JSON.stringify(d));
-const clearSession= () => localStorage.removeItem('bdm_session');
+const getUsers     = () => JSON.parse(localStorage.getItem('bdm_users')   || '[]');
+const saveUsers    = d  => localStorage.setItem('bdm_users',   JSON.stringify(d));
+const getResponses = () => JSON.parse(localStorage.getItem('bdm_resp')    || '[]');
+const saveResponses= d  => localStorage.setItem('bdm_resp',    JSON.stringify(d));
+const getSession   = () => JSON.parse(localStorage.getItem('bdm_session') || 'null');
+const saveSession  = d  => localStorage.setItem('bdm_session', JSON.stringify(d));
+const clearSession = () => localStorage.removeItem('bdm_session');
 
 // ─────────────────────────────────────────────
 // UTILS
 // ─────────────────────────────────────────────
-const $   = id => document.getElementById(id);
-const ft  = s  => `${Math.floor(s/60)}:${(s%60).toString().padStart(2,'0')}`;
-const wc  = t  => t.trim() ? t.trim().split(/\s+/).length : 0;
+const $        = id  => document.getElementById(id);
+const ft       = s   => `${Math.floor(s/60)}:${(s%60).toString().padStart(2,'0')}`;
+const wc       = t   => t.trim() ? t.trim().split(/\s+/).length : 0;
 const showScreen = id => {
   document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
   $(id).classList.add('active');
 };
-const showErr = (id, msg) => { const e=$(id); e.textContent=msg; e.style.display='block'; };
-const hideErr = id => { const e=$(id); e.style.display='none'; };
-const initials = name => name.trim().split(' ').map(w=>w[0]).join('').toUpperCase().slice(0,2);
-const loading = (show, msg='Please wait...') => {
+const showErr  = (id, msg) => { const e=$(id); e.textContent=msg; e.style.display='block'; };
+const hideErr  = id        => { const e=$(id); e.style.display='none'; };
+const initials = name      => name.trim().split(' ').map(w=>w[0]).join('').toUpperCase().slice(0,2);
+const loading  = (show, msg='Please wait...') => {
   $('loading-overlay').classList.toggle('open', show);
   $('loading-msg').textContent = msg;
 };
@@ -501,7 +501,6 @@ window.addEventListener('load', () => {
     requestFS();
     $('fs-warn-overlay').classList.remove('open');
   };
-  // Auto-hide fs-prompt if already fullscreen
   if(document.fullscreenElement) $('fs-prompt').classList.remove('open');
 });
 
@@ -532,15 +531,27 @@ function onVisibility(){
   }
 }
 
-document.addEventListener('contextmenu', e => e.preventDefault());
-document.addEventListener('copy',  e => e.preventDefault());
-document.addEventListener('cut',   e => e.preventDefault());
-document.addEventListener('paste', e => { if(e.target && e.target.id==='ans-input') return; e.preventDefault(); });
+// ─────────────────────────────────────────────
+// ANTI-CHEAT — copy / paste / right-click
+// Blocks EVERYWHERE including the answer textarea.
+// Works on both Windows (Ctrl) and Mac (Cmd/Meta).
+// ─────────────────────────────────────────────
+document.addEventListener('contextmenu', e => e.preventDefault());   // right-click
+document.addEventListener('copy',  e => e.preventDefault());          // Ctrl/Cmd+C
+document.addEventListener('cut',   e => e.preventDefault());          // Ctrl/Cmd+X
+document.addEventListener('paste', e => e.preventDefault());          // Ctrl/Cmd+V (all fields)
+
 document.addEventListener('keydown', e => {
-  const ctrl = e.ctrlKey || e.metaKey;
-  if(ctrl && ['c','x','u','s','p'].includes(e.key.toLowerCase())) e.preventDefault();
-  if(ctrl && e.key.toLowerCase()==='a' && e.target && e.target.id==='ans-input') return;
-  if(e.key==='F12' || (ctrl && e.shiftKey && ['i','j','c'].includes(e.key.toLowerCase()))) e.preventDefault();
+  const ctrl = e.ctrlKey || e.metaKey; // Ctrl on Windows/Linux, Cmd on Mac
+  if(ctrl){
+    const k = e.key.toLowerCase();
+    // Block: copy(c), cut(x), paste(v), select-all(a), view-source(u), save(s), print(p)
+    if(['c','x','v','a','u','s','p'].includes(k)) e.preventDefault();
+    // Block devtools shortcuts
+    if(e.shiftKey && ['i','j','c'].includes(k)) e.preventDefault();
+  }
+  // Block F12 (devtools)
+  if(e.key === 'F12') e.preventDefault();
 });
 
 // ─────────────────────────────────────────────
@@ -561,17 +572,24 @@ $('btn-signup').onclick = () => {
   if(pass !== pass2) return showErr('su-err','Passwords do not match.');
   const users = getUsers();
   if(users.find(u => u.email === email)) return showErr('su-err','An account with this email already exists. Please sign in.');
-  const user = { id: Date.now(), fname, lname, name: fname+' '+lname, email, phone, pass, createdAt: new Date().toLocaleString('en-IN') };
+  const user = {
+    id: Date.now(),
+    fname, lname,
+    name: fname + ' ' + lname,
+    email, phone, pass,
+    createdAt: new Date().toLocaleString('en-IN')
+  };
   users.push(user);
   saveUsers(users);
   saveSession(user);
   S.user = user;
+  sendSignupToSheets(user); // ← sends registration to Google Sheet
   renderDashboard();
   showScreen('screen-dashboard');
 };
 
-$('goto-login').onclick    = () => showScreen('screen-login');
-$('goto-signup').onclick   = () => showScreen('screen-signup');
+$('goto-login').onclick           = () => showScreen('screen-login');
+$('goto-signup').onclick          = () => showScreen('screen-signup');
 $('goto-admin-from-login').onclick = () => showAdminLogin();
 
 // ─────────────────────────────────────────────
@@ -598,8 +616,8 @@ $('li-pass').onkeydown = e => { if(e.key==='Enter') $('btn-login').click(); };
 // ─────────────────────────────────────────────
 function renderDashboard(){
   const u = S.user;
-  $('dash-avatar').textContent = initials(u.name);
-  $('dash-name').textContent   = u.name;
+  $('dash-avatar').textContent  = initials(u.name);
+  $('dash-name').textContent    = u.name;
   $('dash-greeting').textContent = `Hello, ${u.fname}!`;
   const completed = TESTS.filter(t => hasCompleted(u.email, t.id)).length;
   const remaining = 4 - completed;
@@ -632,7 +650,7 @@ function renderDashboard(){
   });
 }
 
-$('btn-logout').onclick = () => { clearSession(); S.user=null; showScreen('screen-login'); };
+$('btn-logout').onclick     = () => { clearSession(); S.user=null; showScreen('screen-login'); };
 $('goto-admin-dash').onclick = e => { e.preventDefault(); showAdminLogin(); };
 
 // ─────────────────────────────────────────────
@@ -642,7 +660,7 @@ function startTest(id){
   if(hasCompleted(S.user.email, id)){ alert('You have already completed this test.'); return; }
   S.test = TESTS.find(t=>t.id===id);
   S.qIdx=0; S.answers={}; S.tabSwitches=0;
-  S.timeLeft = S.test.duration * 60;
+  S.timeLeft  = S.test.duration * 60;
   S.startTime = Date.now();
   showScreen('screen-test');
   renderQ();
@@ -653,19 +671,19 @@ function startTest(id){
 function renderQ(){
   const t=S.test, q=t.questions[S.qIdx], total=t.questions.length;
   $('topbar-info').textContent = `${t.title} — Q${S.qIdx+1}/${total}`;
-  $('timer').textContent = ft(S.timeLeft);
+  $('timer').textContent       = ft(S.timeLeft);
   $('progress-fill').style.width = `${((S.qIdx+1)/total)*100}%`;
-  $('q-counter').textContent = `Question ${S.qIdx+1} of ${total}`;
+  $('q-counter').textContent   = `Question ${S.qIdx+1} of ${total}`;
   $('q-type-badge').textContent = q.type==='long'?'Detailed answer':'Short answer';
-  $('q-type-badge').className = 'q-type-badge '+(q.type==='long'?'q-type-long':'q-type-short');
-  $('q-text').textContent = q.text;
-  $('q-hint').textContent = q.hint?`💡 ${q.hint}`:'';
+  $('q-type-badge').className  = 'q-type-badge '+(q.type==='long'?'q-type-long':'q-type-short');
+  $('q-text').textContent      = q.text;
+  $('q-hint').textContent      = q.hint?`💡 ${q.hint}`:'';
   const ans = S.answers[q.id]||'';
-  $('ans-input').value = ans;
-  $('word-count').textContent = `${wc(ans)} words`;
+  $('ans-input').value         = ans;
+  $('word-count').textContent  = `${wc(ans)} words`;
   $('ans-input').oninput = () => $('word-count').textContent = `${wc($('ans-input').value)} words`;
-  $('btn-prev').disabled = S.qIdx===0;
-  $('btn-next').textContent = S.qIdx===total-1?'Review & Submit':'Save & Next →';
+  $('btn-prev').disabled       = S.qIdx===0;
+  $('btn-next').textContent    = S.qIdx===total-1?'Review & Submit':'Save & Next →';
   renderDots();
 }
 
@@ -708,7 +726,7 @@ async function doSubmit(auto){
   saveAns();
   clearInterval(S.timerInt);
   document.removeEventListener('visibilitychange', onVisibility);
-  const elapsed = Math.round((Date.now()-S.startTime)/1000);
+  const elapsed      = Math.round((Date.now()-S.startTime)/1000);
   const answeredCount = Object.values(S.answers).filter(v=>v&&v.trim()).length;
   const rec = {
     id: Date.now(),
@@ -722,21 +740,50 @@ async function doSubmit(auto){
   };
   const all = getResponses(); all.push(rec); saveResponses(all);
   $('done-answered').textContent = answeredCount;
-  $('done-time').textContent = Math.round(elapsed/60)+'m';
-  $('done-flags').textContent = S.tabSwitches;
-  $('done-sub').textContent = auto
+  $('done-time').textContent     = Math.round(elapsed/60)+'m';
+  $('done-flags').textContent    = S.tabSwitches;
+  $('done-sub').textContent      = auto
     ? 'Time ran out — your answers were auto-submitted.'
     : 'Your responses have been recorded. You cannot retake this test.';
   showScreen('screen-done');
   sendToSheets(rec);
 }
 
+// ─────────────────────────────────────────────
+// GOOGLE SHEETS — Test submission
+// ─────────────────────────────────────────────
 async function sendToSheets(rec){
   if(GOOGLE_SCRIPT_URL==='YOUR_GOOGLE_APPS_SCRIPT_URL_HERE') return;
   try {
-    const flat={name:rec.name,email:rec.email,phone:rec.phone,testId:rec.testId,testTitle:rec.testTitle,tabSwitches:rec.tabSwitches,timeTaken:rec.timeTaken,autoSubmit:rec.autoSubmit,submittedAt:rec.submittedAt};
+    const flat = {
+      type: 'submission',
+      name: rec.name, email: rec.email, phone: rec.phone,
+      testId: rec.testId, testTitle: rec.testTitle,
+      tabSwitches: rec.tabSwitches, timeTaken: rec.timeTaken,
+      autoSubmit: rec.autoSubmit, submittedAt: rec.submittedAt
+    };
     TESTS.find(t=>t.id===rec.testId).questions.forEach((q,i)=>{ flat[`Q${i+1}`]=rec.answers[q.id]||''; });
-    await fetch(GOOGLE_SCRIPT_URL,{method:'POST',body:JSON.stringify(flat)});
+    await fetch(GOOGLE_SCRIPT_URL, { method:'POST', body: JSON.stringify(flat) });
+  } catch(e){}
+}
+
+// ─────────────────────────────────────────────
+// GOOGLE SHEETS — Signup / registration
+// Sends candidate details to the "Registrations"
+// tab in the sheet the moment they create an account.
+// Passwords are intentionally NOT sent.
+// ─────────────────────────────────────────────
+async function sendSignupToSheets(user){
+  if(GOOGLE_SCRIPT_URL==='YOUR_GOOGLE_APPS_SCRIPT_URL_HERE') return;
+  try {
+    const payload = {
+      type:      'signup',
+      name:      user.name,
+      email:     user.email,
+      phone:     user.phone || '',
+      createdAt: user.createdAt,
+    };
+    await fetch(GOOGLE_SCRIPT_URL, { method:'POST', body: JSON.stringify(payload) });
   } catch(e){}
 }
 
@@ -766,9 +813,9 @@ function showAdminLogin(){
 
 function renderAdmin(){
   const responses = getResponses();
-  const users = getUsers();
-  const s = $('screen-admin');
-  const flagged = responses.filter(r=>r.tabSwitches>0).length;
+  const users     = getUsers();
+  const flagged   = responses.filter(r=>r.tabSwitches>0).length;
+  const s         = $('screen-admin');
   s.innerHTML=`
     <div class="admin-header">
       <div class="admin-header-title">Admin Portal</div>
@@ -819,7 +866,7 @@ function renderSubmissionsTab(){
 
 function renderCandidatesTab(){
   const users = getUsers();
-  const c = $('admin-tab-content');
+  const c     = $('admin-tab-content');
   if(!users.length){ c.innerHTML=`<div class="empty-state"><div style="font-size:40px">👤</div><p>No candidates registered yet.</p></div>`; return; }
   c.innerHTML = users.map(u=>{
     const done = TESTS.filter(t=>hasCompleted(u.email,t.id));
@@ -881,12 +928,11 @@ function renderDetail(rid){
 }
 
 // ─────────────────────────────────────────────
-// INIT — check for existing session
+// INIT — restore session on page load
 // ─────────────────────────────────────────────
 (function init(){
   const sess = getSession();
   if(sess){
-    // Verify user still exists
     const users = getUsers();
     const user  = users.find(u=>u.email===sess.email && u.pass===sess.pass);
     if(user){ S.user=user; renderDashboard(); showScreen('screen-dashboard'); return; }
