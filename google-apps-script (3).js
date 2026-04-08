@@ -88,8 +88,10 @@ function doPost(e) {
     if      (action === 'register')    { result = handleRegister(data); }
     else if (action === 'login')       { result = handleLogin(data); }
     else if (action === 'submit_test') { result = handleSubmitTest(data); }
-    else if (action === 'save_notes')  { result = handleSaveNotes(data); }
-    else                               { result = { status: 'error', message: 'Unknown action' }; }
+    else if (action === 'save_notes')      { result = handleSaveNotes(data); }
+    else if (action === 'forgot_password') { result = handleForgotPassword(data); }
+    else if (action === 'reset_password')  { result = handleResetPassword(data); }
+    else                                   { result = { status: 'error', message: 'Unknown action' }; }
     return jsonResponse(result);
   } catch (err) {
     return jsonResponse({ status: 'error', message: err.toString() });
@@ -470,4 +472,84 @@ function handleSaveNotes(data) {
     }
   }
   return { status: 'error', message: 'Submission not found.' };
+}
+
+// =================================================================
+// FORGOT PASSWORD — looks up email, sends password via Gmail
+// =================================================================
+function handleForgotPassword(data) {
+  var email = (data.email || '').toLowerCase().trim();
+  if (!email) return { status: 'error', message: 'Please enter your email address.' };
+
+  var ss = getOrCreateSS();
+  var sheet = ss.getSheetByName(TAB.USERS);
+  if (!sheet) return { status: 'error', message: 'No accounts found. Please register first.' };
+
+  var rows = sheetToObjects(sheet);
+  var user = null;
+  for (var i = 0; i < rows.length; i++) {
+    if (rows[i]['Email'] && rows[i]['Email'].toString().toLowerCase() === email) {
+      user = rows[i];
+      break;
+    }
+  }
+
+  if (!user) return { status: 'error', message: 'No account found with this email address.' };
+
+  // Send password via email
+  try {
+    var subject = 'Educart BDM Portal — Your Password';
+    var body =
+      'Hello ' + (user['Name'] || 'there') + ',\n\n' +
+      'You requested your password for the Educart BDM Assessment Portal.\n\n' +
+      'Your password is: ' + (user['Password'] || '(not set)') + '\n\n' +
+      'If you did not request this, please ignore this email.\n\n' +
+      '— Educart Assessment Team';
+    MailApp.sendEmail(email, subject, body);
+    return { status: 'ok', message: 'Password has been sent to your email address.' };
+  } catch (err) {
+    return { status: 'error', message: 'Could not send email. Please contact the admin.' };
+  }
+}
+
+// =================================================================
+// RESET PASSWORD — verifies email + phone, then sets new password
+// =================================================================
+function handleResetPassword(data) {
+  var email = (data.email || '').toLowerCase().trim();
+  var phone = (data.phone || '').trim();
+  var newPass = data.newPass || '';
+
+  if (!email) return { status: 'error', message: 'Please enter your email address.' };
+  if (!phone) return { status: 'error', message: 'Please enter your phone number.' };
+  if (newPass.length < 6) return { status: 'error', message: 'New password must be at least 6 characters.' };
+
+  var ss = getOrCreateSS();
+  var sheet = ss.getSheetByName(TAB.USERS);
+  if (!sheet) return { status: 'error', message: 'No accounts found. Please register first.' };
+
+  var allData = sheet.getDataRange().getValues();
+  var headers = allData[0];
+  var emailIdx = -1, phoneIdx = -1, passIdx = -1;
+  for (var h = 0; h < headers.length; h++) {
+    if (headers[h] === 'Email') emailIdx = h;
+    if (headers[h] === 'Phone') phoneIdx = h;
+    if (headers[h] === 'Password') passIdx = h;
+  }
+  if (passIdx < 0) return { status: 'error', message: 'Password column not found in sheet.' };
+
+  for (var i = 1; i < allData.length; i++) {
+    var rowEmail = (allData[i][emailIdx] || '').toString().toLowerCase();
+    var rowPhone = (allData[i][phoneIdx] || '').toString().trim();
+    // Normalize phone: strip spaces, dashes, +91 prefix for comparison
+    var normInput = phone.replace(/[\s\-\+]/g, '').replace(/^91/, '');
+    var normRow = rowPhone.replace(/[\s\-\+]/g, '').replace(/^91/, '');
+
+    if (rowEmail === email && normRow === normInput) {
+      sheet.getRange(i + 1, passIdx + 1).setValue(newPass);
+      return { status: 'ok', message: 'Password has been reset successfully. You can now sign in.' };
+    }
+  }
+
+  return { status: 'error', message: 'Email and phone number do not match any account.' };
 }

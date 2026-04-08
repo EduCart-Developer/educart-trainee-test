@@ -287,9 +287,60 @@ body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--text);min
         <div class="field"><label>Password</label><input id="li-pw" type="password" placeholder="Your password"></div>
         <div class="err-msg" id="li-err"></div>
         <button class="btn-primary" id="btn-login">Sign In</button>
+        <div style="text-align:right;margin-top:8px"><a id="goto-forgot" style="font-size:12px;color:var(--brand2);text-decoration:none;cursor:pointer">Forgot password?</a></div>
         <div class="auth-toggle">Don't have an account? <a id="goto-signup">Create one →</a></div>
         <div class="divider">or</div>
         <div style="text-align:center"><a id="goto-admin-link" style="font-size:12px;color:var(--text3);text-decoration:none;cursor:pointer">Admin Portal →</a></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+
+<!-- FORGOT PASSWORD -->
+<div class="screen" id="screen-forgot">
+  <div class="auth-wrap">
+    <div class="auth-left">
+      <div><div class="brand-mark">Educart</div><div class="brand-sub">BDM Assessment Portal</div></div>
+      <div class="auth-hero"><h1>Reset <em>Password</em></h1><p>Choose how you'd like to recover access to your account.</p></div>
+      <div class="auth-stats">
+        <div><div class="stat-num">4</div><div class="stat-lbl">Tests</div></div>
+        <div><div class="stat-num">39</div><div class="stat-lbl">Questions</div></div>
+        <div><div class="stat-num">45<span style="font-size:18px">m</span></div><div class="stat-lbl">Per test</div></div>
+      </div>
+    </div>
+    <div class="auth-right">
+      <div class="auth-card">
+        <!-- Tab switcher for the two methods -->
+        <div style="display:flex;gap:4px;border-bottom:1px solid var(--border);margin-bottom:1.25rem">
+          <div class="admin-tab active" id="fp-tab-email" style="flex:1;text-align:center;padding:10px;cursor:pointer;font-size:13px;font-weight:500">Email Recovery</div>
+          <div class="admin-tab" id="fp-tab-reset" style="flex:1;text-align:center;padding:10px;cursor:pointer;font-size:13px;font-weight:500">Reset with Phone</div>
+        </div>
+
+        <!-- Method 1: Email password to user -->
+        <div id="fp-email-panel">
+          <div class="auth-title" style="font-size:22px">Email My Password</div>
+          <div class="auth-sub">We'll send your existing password to your registered email.</div>
+          <div class="field"><label>Email Address</label><input id="fp-em" type="email" placeholder="priya@example.com" autocomplete="off"></div>
+          <div class="err-msg" id="fp-err"></div>
+          <div id="fp-success" style="display:none;font-size:13px;color:var(--green);background:#E8F5E9;padding:10px 14px;border-radius:var(--rs);margin-top:8px"></div>
+          <button class="btn-primary" id="btn-fp-send">Send Password to Email</button>
+        </div>
+
+        <!-- Method 2: Reset via phone verification -->
+        <div id="fp-reset-panel" style="display:none">
+          <div class="auth-title" style="font-size:22px">Reset Password</div>
+          <div class="auth-sub">Verify your identity with your email and phone number to set a new password.</div>
+          <div class="field"><label>Email Address</label><input id="rp-em" type="email" placeholder="priya@example.com" autocomplete="off"></div>
+          <div class="field"><label>Phone Number</label><input id="rp-ph" type="tel" placeholder="+91 98765 43210"></div>
+          <div class="field"><label>New Password</label><input id="rp-pw" type="password" placeholder="Min. 6 characters"></div>
+          <div class="field"><label>Confirm New Password</label><input id="rp-pw2" type="password" placeholder="Re-enter new password"></div>
+          <div class="err-msg" id="rp-err"></div>
+          <div id="rp-success" style="display:none;font-size:13px;color:var(--green);background:#E8F5E9;padding:10px 14px;border-radius:var(--rs);margin-top:8px"></div>
+          <button class="btn-primary" id="btn-rp-reset">Reset Password</button>
+        </div>
+
+        <div class="auth-toggle" style="margin-top:1.5rem">Remember your password? <a id="goto-login-from-forgot">Sign in →</a></div>
       </div>
     </div>
   </div>
@@ -503,6 +554,55 @@ $('btn-signup').onclick = async () => {
 $('goto-login').onclick   = () => showScreen('screen-login');
 $('goto-signup').onclick  = () => showScreen('screen-signup');
 $('goto-admin-link').onclick = () => showAdminLogin();
+$('goto-forgot').onclick  = () => showScreen('screen-forgot');
+$('goto-login-from-forgot').onclick = () => showScreen('screen-login');
+
+// ─────────────────────────────────────────
+// FORGOT PASSWORD — Tab switching
+// ─────────────────────────────────────────
+$('fp-tab-email').onclick = () => {
+  $('fp-tab-email').classList.add('active'); $('fp-tab-reset').classList.remove('active');
+  $('fp-email-panel').style.display='block'; $('fp-reset-panel').style.display='none';
+};
+$('fp-tab-reset').onclick = () => {
+  $('fp-tab-reset').classList.add('active'); $('fp-tab-email').classList.remove('active');
+  $('fp-reset-panel').style.display='block'; $('fp-email-panel').style.display='none';
+};
+
+// Method 1: Email the password
+$('btn-fp-send').onclick = async () => {
+  hideErr('fp-err'); $('fp-success').style.display='none';
+  const em = $('fp-em').value.trim().toLowerCase();
+  if(!em||!em.includes('@')) return showErr('fp-err','Please enter a valid email address.');
+  loading(true,'Looking up your account...');
+  try {
+    const res = await apiPost({ action:'forgot_password', email:em });
+    loading(false);
+    if(res.status!=='ok') return showErr('fp-err', res.message||'Something went wrong.');
+    $('fp-success').textContent = res.message || 'Password sent to your email!';
+    $('fp-success').style.display = 'block';
+  } catch(e) { loading(false); showErr('fp-err','Connection error. Please try again.'); }
+};
+
+// Method 2: Reset via phone verification
+$('btn-rp-reset').onclick = async () => {
+  hideErr('rp-err'); $('rp-success').style.display='none';
+  const em = $('rp-em').value.trim().toLowerCase();
+  const ph = $('rp-ph').value.trim();
+  const pw = $('rp-pw').value, pw2 = $('rp-pw2').value;
+  if(!em||!em.includes('@')) return showErr('rp-err','Please enter a valid email address.');
+  if(!ph) return showErr('rp-err','Please enter your registered phone number.');
+  if(pw.length<6) return showErr('rp-err','New password must be at least 6 characters.');
+  if(pw!==pw2) return showErr('rp-err','Passwords do not match.');
+  loading(true,'Resetting your password...');
+  try {
+    const res = await apiPost({ action:'reset_password', email:em, phone:ph, newPass:pw });
+    loading(false);
+    if(res.status!=='ok') return showErr('rp-err', res.message||'Reset failed.');
+    $('rp-success').textContent = res.message || 'Password reset successfully!';
+    $('rp-success').style.display = 'block';
+  } catch(e) { loading(false); showErr('rp-err','Connection error. Please try again.'); }
+};
 
 // ─────────────────────────────────────────
 // AUTH — LOGIN
