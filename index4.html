@@ -1,0 +1,1368 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Educart BDM Assessment Portal</title>
+<link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display:ital@0;1&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
+<style>
+:root {
+  --bg:#F7F5F0;--surface:#FFFFFF;--surface2:#F0EDE6;
+  --brand:#1A3A2A;--brand2:#2D6A4F;--accent:#E8A020;--accent2:#F5C842;
+  --text:#1A1A1A;--text2:#555550;--text3:#999990;
+  --border:rgba(26,58,42,0.12);--border2:rgba(26,58,42,0.22);
+  --red:#C0392B;--green:#1A6B3A;--radius:12px;--radius-sm:8px;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+html{scroll-behavior:smooth}
+body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--text);min-height:100vh;font-size:15px;line-height:1.6}
+.screen{display:none;min-height:100vh}.screen.active{display:block}
+#screen-done.active{display:flex}
+#screen-admin.active{display:block}
+
+/* ── AUTH ── */
+.auth-wrap{min-height:100vh;display:grid;grid-template-columns:1fr 1fr}
+.auth-left{background:var(--brand);padding:3rem;display:flex;flex-direction:column;justify-content:space-between;position:relative;overflow:hidden}
+.auth-left::before{content:'';position:absolute;width:400px;height:400px;border-radius:50%;background:rgba(232,160,32,0.07);top:-100px;right:-100px}
+.auth-left::after{content:'';position:absolute;width:300px;height:300px;border-radius:50%;background:rgba(45,106,79,0.25);bottom:-80px;left:-80px}
+.brand-mark{font-family:'DM Serif Display',serif;font-size:28px;color:var(--accent2)}
+.brand-sub{font-size:12px;color:rgba(255,255,255,0.4);letter-spacing:.1em;text-transform:uppercase;margin-top:4px}
+.auth-hero{position:relative;z-index:1}
+.auth-hero h1{font-family:'DM Serif Display',serif;font-size:clamp(32px,4vw,50px);color:#fff;line-height:1.1;margin-bottom:1rem}
+.auth-hero h1 em{font-style:italic;color:var(--accent2)}
+.auth-hero p{color:rgba(255,255,255,0.55);font-size:15px;max-width:320px;line-height:1.7}
+.auth-stats{display:flex;gap:2rem;position:relative;z-index:1}
+.stat-num{font-family:'DM Serif Display',serif;font-size:30px;color:var(--accent2)}
+.stat-lbl{font-size:11px;color:rgba(255,255,255,0.4);letter-spacing:.05em;text-transform:uppercase}
+.auth-right{padding:3rem;display:flex;align-items:center;justify-content:center;background:var(--bg)}
+.auth-card{width:100%;max-width:420px}
+.auth-title{font-family:'DM Serif Display',serif;font-size:26px;color:var(--brand);margin-bottom:4px}
+.auth-sub{font-size:13px;color:var(--text3);margin-bottom:1.75rem}
+.auth-toggle{font-size:13px;color:var(--text3);margin-top:1.25rem;text-align:center}
+.auth-toggle a{color:var(--brand2);text-decoration:none;font-weight:500;cursor:pointer}
+.auth-toggle a:hover{text-decoration:underline}
+
+/* ── FORMS ── */
+.field{margin-bottom:.9rem}
+.field label{display:block;font-size:11px;font-weight:600;color:var(--brand);text-transform:uppercase;letter-spacing:.06em;margin-bottom:5px}
+.field input{width:100%;padding:11px 14px;border:1px solid var(--border2);border-radius:var(--radius-sm);font-family:'DM Sans',sans-serif;font-size:15px;background:var(--surface);color:var(--text);outline:none;transition:border-color .2s,box-shadow .2s}
+.field input:focus{border-color:var(--brand2);box-shadow:0 0 0 3px rgba(45,106,79,.1)}
+.field-row{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.err-msg{font-size:12px;color:var(--red);margin-top:6px;display:none}
+.btn-primary{width:100%;padding:12px;background:var(--brand);color:#fff;border:none;border-radius:var(--radius-sm);font-family:'DM Sans',sans-serif;font-size:15px;font-weight:500;cursor:pointer;transition:background .2s;margin-top:4px}
+.btn-primary:hover{background:var(--brand2)}
+.btn-primary:disabled{opacity:.5;cursor:not-allowed}
+.divider{display:flex;align-items:center;gap:10px;margin:1.25rem 0;color:var(--text3);font-size:12px}
+.divider::before,.divider::after{content:'';flex:1;height:1px;background:var(--border2)}
+
+/* ── DASHBOARD ── */
+#screen-dashboard{background:var(--bg)}
+.dash-header{background:var(--brand);padding:1rem 2rem;display:flex;align-items:center;justify-content:space-between}
+.dash-brand{font-family:'DM Serif Display',serif;font-size:20px;color:var(--accent2)}
+.dash-user{display:flex;align-items:center;gap:12px}
+.avatar{width:36px;height:36px;border-radius:50%;background:rgba(245,200,66,.2);display:flex;align-items:center;justify-content:center;font-weight:600;font-size:13px;color:var(--accent2)}
+.dash-name{font-size:13px;color:rgba(255,255,255,.8)}
+.btn-logout{background:rgba(255,255,255,.1);border:1px solid rgba(255,255,255,.2);color:#fff;padding:6px 14px;border-radius:var(--radius-sm);font-size:12px;cursor:pointer;font-family:'DM Sans',sans-serif;transition:background .2s}
+.btn-logout:hover{background:rgba(255,255,255,.2)}
+.dash-body{padding:2rem;max-width:760px;margin:0 auto}
+.dash-greeting{font-family:'DM Serif Display',serif;font-size:28px;color:var(--brand);margin-bottom:4px}
+.dash-sub{font-size:14px;color:var(--text3);margin-bottom:2rem}
+.progress-overview{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-bottom:2rem}
+.prog-card{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:1rem;text-align:center}
+.prog-card-num{font-family:'DM Serif Display',serif;font-size:28px}
+.prog-card-lbl{font-size:11px;color:var(--text3);text-transform:uppercase;letter-spacing:.05em;margin-top:2px}
+.tests-grid{display:grid;gap:12px}
+.test-card{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:1.25rem 1.5rem;display:flex;align-items:center;justify-content:space-between;gap:1rem;transition:all .2s}
+.test-card.available:hover{border-color:var(--brand2);box-shadow:0 4px 20px rgba(26,58,42,.1);transform:translateY(-1px)}
+.test-card.completed{background:var(--surface2);opacity:.85}
+.tc-left{display:flex;align-items:center;gap:14px}
+.tc-num{width:40px;height:40px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-weight:600;font-size:14px;flex-shrink:0}
+.t1{background:#E8F4FD;color:#1A5A8A}.t2{background:#FFF3E0;color:#8A4A1A}
+.t3{background:#E8F5E9;color:#1A5A2A}.t4{background:#FCE4EC;color:#8A1A3A}
+.tc-title{font-size:14px;font-weight:600;color:var(--text)}
+.tc-meta{font-size:12px;color:var(--text3);margin-top:2px}
+.tc-badge{font-size:11px;font-weight:600;padding:4px 12px;border-radius:50px;text-transform:uppercase;letter-spacing:.04em;white-space:nowrap}
+.badge-available{background:var(--brand);color:#fff;cursor:pointer;border:none;font-family:'DM Sans',sans-serif;transition:background .2s}
+.badge-available:hover{background:var(--brand2)}
+.badge-done{background:#E8F5E9;color:#1A6B3A}
+.admin-link-row{text-align:center;margin-top:2rem;font-size:12px;color:var(--text3)}
+.admin-link-row a{color:var(--brand2);text-decoration:none;font-weight:500}
+
+/* ── TEST SCREEN ── */
+#screen-test.active{display:flex;flex-direction:column}
+.test-topbar{background:var(--brand);color:#fff;padding:0 2rem;height:60px;display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;z-index:100}
+.topbar-brand{font-family:'DM Serif Display',serif;font-size:18px;color:var(--accent2)}
+.topbar-info{font-size:12px;color:rgba(255,255,255,.55)}
+.timer{background:rgba(255,255,255,.1);border:1px solid rgba(255,255,255,.2);border-radius:var(--radius-sm);padding:6px 14px;font-size:18px;font-weight:600;font-variant-numeric:tabular-nums;color:#fff;min-width:80px;text-align:center;transition:background .3s}
+.timer.urgent{background:rgba(192,57,43,.6);border-color:rgba(192,57,43,.8)}
+.progress-bar{height:3px;background:var(--surface2)}
+.progress-fill{height:100%;background:linear-gradient(90deg,var(--brand2),var(--accent));transition:width .4s}
+.test-body{flex:1;padding:2rem;max-width:800px;margin:0 auto;width:100%}
+.warn-banner{background:#FFF3E0;border:1px solid rgba(232,160,32,.4);border-radius:var(--radius-sm);padding:10px 14px;font-size:13px;color:#7A5010;margin-bottom:1rem;display:none;font-weight:500}
+.q-header{display:flex;justify-content:space-between;align-items:center;margin-bottom:1.25rem}
+.q-counter{font-size:13px;color:var(--text3)}
+.q-type-badge{font-size:11px;font-weight:600;padding:3px 10px;border-radius:50px;text-transform:uppercase;letter-spacing:.06em}
+.q-type-long{background:#E8F4FD;color:#1A5A8A}.q-type-short{background:#E8F5E9;color:#1A5A2A}
+.question-card{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:2rem;margin-bottom:1.5rem}
+.q-text{font-size:17px;color:var(--text);line-height:1.7;margin-bottom:1.25rem}
+.q-hint{font-size:12px;color:var(--text3);margin-bottom:10px;font-style:italic}
+.answer-area{width:100%;min-height:160px;border:1px solid var(--border2);border-radius:var(--radius-sm);padding:14px 16px;font-family:'DM Sans',sans-serif;font-size:15px;color:var(--text);background:var(--bg);resize:vertical;outline:none;transition:border-color .2s,box-shadow .2s;line-height:1.7}
+.answer-area:focus{border-color:var(--brand2);box-shadow:0 0 0 3px rgba(45,106,79,.1)}
+.word-count{font-size:11px;color:var(--text3);margin-top:6px;text-align:right}
+.q-nav-row{display:flex;justify-content:space-between;align-items:center;gap:10px}
+.btn-nav{background:var(--surface);border:1px solid var(--border2);border-radius:var(--radius-sm);padding:10px 20px;font-family:'DM Sans',sans-serif;font-size:14px;font-weight:500;cursor:pointer;color:var(--text);transition:all .2s}
+.btn-nav:hover:not(:disabled){background:var(--surface2);border-color:var(--brand2)}
+.btn-nav:disabled{opacity:.4;cursor:not-allowed}
+.btn-nav-primary{background:var(--brand);color:#fff;border:none}.btn-nav-primary:hover{background:var(--brand2) !important}
+.btn-nav-danger{background:transparent;border:1px solid rgba(192,57,43,.3);color:var(--red)}
+.btn-nav-danger:hover{background:rgba(192,57,43,.06) !important}
+.q-dots{display:flex;flex-wrap:wrap;gap:6px;margin-bottom:1rem}
+.q-dot{width:28px;height:28px;border-radius:50%;border:1.5px solid var(--border2);background:var(--surface);font-size:11px;font-weight:600;cursor:pointer;display:flex;align-items:center;justify-content:center;color:var(--text2);transition:all .15s}
+.q-dot:hover{border-color:var(--brand2);color:var(--brand2)}
+.q-dot.answered{background:var(--brand);border-color:var(--brand);color:#fff}
+.q-dot.current{border-color:var(--accent);background:rgba(232,160,32,.1);color:var(--brand)}
+
+/* ── DONE ── */
+#screen-done{background:var(--bg);align-items:center;justify-content:center;padding:2rem}
+.done-card{background:var(--surface);border:1px solid var(--border);border-radius:20px;padding:3rem;text-align:center;max-width:500px;width:100%}
+.done-icon{width:72px;height:72px;background:#E8F5E9;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:32px;margin:0 auto 1.5rem}
+.done-title{font-family:'DM Serif Display',serif;font-size:28px;color:var(--brand);margin-bottom:8px}
+.done-sub{color:var(--text2);font-size:14px;line-height:1.7;margin-bottom:2rem}
+.done-stats{display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px;margin-bottom:2rem}
+.done-stat{background:var(--bg);border-radius:var(--radius-sm);padding:1rem}
+.done-stat-val{font-size:24px;font-weight:600;color:var(--brand)}
+.done-stat-lbl{font-size:11px;color:var(--text3);text-transform:uppercase;letter-spacing:.05em;margin-top:2px}
+
+/* ── ADMIN SHELL ── */
+#screen-admin{background:var(--bg)}
+.admin-header{background:var(--brand);padding:1rem 2rem;display:flex;align-items:center;justify-content:space-between}
+.admin-header-title{font-family:'DM Serif Display',serif;font-size:20px;color:var(--accent2)}
+.btn-exit{background:rgba(255,255,255,.1);border:1px solid rgba(255,255,255,.2);color:#fff;padding:6px 16px;border-radius:var(--radius-sm);font-size:13px;cursor:pointer;font-family:'DM Sans',sans-serif;transition:background .2s}
+.btn-exit:hover{background:rgba(255,255,255,.2)}
+.admin-body{padding:2rem;max-width:1100px;margin:0 auto}
+.admin-metrics{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-bottom:2rem}
+.admin-metric{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:1.25rem}
+.admin-metric-val{font-family:'DM Serif Display',serif;font-size:32px;color:var(--brand)}
+.admin-metric-lbl{font-size:12px;color:var(--text3);text-transform:uppercase;letter-spacing:.05em;margin-top:4px}
+.section-title{font-size:13px;font-weight:600;color:var(--text3);text-transform:uppercase;letter-spacing:.08em;margin-bottom:12px}
+.admin-tabs{display:flex;gap:4px;border-bottom:1px solid var(--border);margin-bottom:1.5rem}
+.admin-tab{padding:8px 18px;font-size:14px;cursor:pointer;border-bottom:2px solid transparent;color:var(--text3);transition:all .15s}
+.admin-tab.active{border-bottom:2px solid var(--brand2);color:var(--brand2);font-weight:500}
+.response-row{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:14px 18px;margin-bottom:8px;display:flex;align-items:center;justify-content:space-between;gap:12px}
+.resp-name{font-weight:600;font-size:14px;color:var(--text)}
+.resp-meta{font-size:12px;color:var(--text3);margin-top:2px}
+.tag{font-size:11px;font-weight:600;padding:3px 10px;border-radius:50px;text-transform:uppercase;letter-spacing:.04em}
+.tag-t1{background:#E8F4FD;color:#1A5A8A}.tag-t2{background:#FFF3E0;color:#8A4A1A}
+.tag-t3{background:#E8F5E9;color:#1A5A2A}.tag-t4{background:#FCE4EC;color:#8A1A3A}
+.tag-flag{background:#FDEDEC;color:#A32D2D}.tag-clean{background:#E8F5E9;color:#1A6B3A}
+.tag-evaluated{background:#E8F4FD;color:#1A5A8A}
+.btn-review{background:var(--brand);color:#fff;border:none;border-radius:var(--radius-sm);padding:7px 16px;font-size:12px;font-family:'DM Sans',sans-serif;font-weight:500;cursor:pointer;white-space:nowrap;transition:background .2s}
+.btn-review:hover{background:var(--brand2)}
+.empty-state{text-align:center;padding:4rem 2rem;color:var(--text3)}
+.candidate-row{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:14px 18px;margin-bottom:8px;display:flex;align-items:center;justify-content:space-between;gap:12px}
+.progress-pips{display:flex;gap:4px}
+.pip{width:10px;height:10px;border-radius:50%;background:var(--border2)}
+.pip.done{background:var(--brand2)}
+.pip.evaluated{background:var(--accent)}
+
+/* ── DETAIL / EVALUATION VIEW ── */
+.detail-topbar{background:var(--surface);border-bottom:1px solid var(--border);padding:1rem 2rem;display:flex;align-items:center;gap:1rem;position:sticky;top:0;z-index:10}
+.detail-body{padding:2rem;max-width:920px;margin:0 auto}
+.detail-meta-card{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:1.5rem;margin-bottom:1.5rem;display:grid;grid-template-columns:repeat(3,1fr);gap:1rem}
+.dm-item-lbl{font-size:11px;text-transform:uppercase;letter-spacing:.06em;color:var(--text3);font-weight:600;margin-bottom:4px}
+.dm-item-val{font-size:15px;color:var(--text);font-weight:500}
+
+/* ── QA EVAL BLOCK ── */
+.qa-block{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:1.5rem;margin-bottom:14px}
+.qa-block-header{display:flex;justify-content:space-between;align-items:flex-start;gap:1rem;margin-bottom:10px}
+.qa-q-num{font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:.06em;color:var(--text3)}
+.qa-score-badge{font-size:13px;font-weight:700;padding:4px 12px;border-radius:50px;background:var(--surface2);color:var(--text2);min-width:60px;text-align:center}
+.qa-score-badge.scored{background:#E8F5E9;color:var(--green)}
+.qa-question{font-size:14px;color:var(--text2);background:var(--bg);border-radius:var(--radius-sm);padding:12px 16px;margin-bottom:12px;line-height:1.6;border-left:3px solid var(--brand2)}
+.qa-ans-lbl{font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:.06em;color:var(--brand2);margin-bottom:8px}
+.qa-answer{font-size:14px;line-height:1.75;color:var(--text);white-space:pre-wrap;padding:12px 16px;background:var(--bg);border-radius:var(--radius-sm);margin-bottom:14px;min-height:40px}
+.qa-empty{color:var(--text3);font-style:italic;font-size:13px}
+.eval-row{display:grid;grid-template-columns:200px 1fr;gap:12px;align-items:start;margin-top:4px}
+.eval-score-wrap{display:flex;flex-direction:column;gap:6px}
+.eval-score-label{font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:.06em;color:var(--text3)}
+.score-input-wrap{display:flex;align-items:center;gap:6px}
+.score-input{width:64px;padding:8px 10px;border:1px solid var(--border2);border-radius:var(--radius-sm);font-family:'DM Sans',sans-serif;font-size:16px;font-weight:600;color:var(--brand);text-align:center;outline:none;transition:border-color .2s}
+.score-input:focus{border-color:var(--brand2);box-shadow:0 0 0 3px rgba(45,106,79,.1)}
+.score-max{font-size:13px;color:var(--text3);font-weight:500}
+.score-stars{display:flex;gap:3px;margin-top:4px}
+.star{font-size:18px;cursor:pointer;color:var(--border2);transition:color .1s;user-select:none}
+.star.on{color:var(--accent)}
+.eval-comment-wrap{display:flex;flex-direction:column;gap:6px}
+.eval-comment-label{font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:.06em;color:var(--text3)}
+.comment-input{width:100%;min-height:72px;border:1px solid var(--border2);border-radius:var(--radius-sm);padding:10px 14px;font-family:'DM Sans',sans-serif;font-size:13px;color:var(--text);background:var(--bg);resize:vertical;outline:none;transition:border-color .2s}
+.comment-input:focus{border-color:var(--brand2)}
+
+/* ── EVAL SUMMARY BAR ── */
+.eval-summary-bar{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:1.25rem 1.5rem;margin-bottom:1.5rem;display:flex;align-items:center;justify-content:space-between;gap:1rem;flex-wrap:wrap}
+.eval-sum-title{font-size:14px;font-weight:600;color:var(--brand)}
+.eval-sum-score{font-family:'DM Serif Display',serif;font-size:28px;color:var(--brand2)}
+.eval-sum-sub{font-size:12px;color:var(--text3);margin-top:2px}
+.eval-overall-wrap{display:flex;flex-direction:column;gap:6px;min-width:260px}
+.eval-overall-label{font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:.06em;color:var(--text3)}
+.eval-overall-input{width:100%;padding:9px 14px;border:1px solid var(--border2);border-radius:var(--radius-sm);font-family:'DM Sans',sans-serif;font-size:13px;color:var(--text);background:var(--bg);outline:none;transition:border-color .2s}
+.eval-overall-input:focus{border-color:var(--brand2)}
+.btn-save-eval{background:var(--brand);color:#fff;border:none;border-radius:var(--radius-sm);padding:10px 24px;font-family:'DM Sans',sans-serif;font-size:14px;font-weight:500;cursor:pointer;transition:background .2s;white-space:nowrap}
+.btn-save-eval:hover{background:var(--brand2)}
+
+/* ── SCORE PROGRESS BAR ── */
+.score-bar-wrap{margin-top:6px}
+.score-bar-bg{height:6px;background:var(--border2);border-radius:3px;overflow:hidden}
+.score-bar-fill{height:100%;border-radius:3px;transition:width .4s;background:linear-gradient(90deg,var(--brand2),var(--accent))}
+
+/* ── CANDIDATE REPORT ── */
+.report-wrap{padding:2rem;max-width:900px;margin:0 auto}
+.report-header{background:var(--brand);border-radius:var(--radius);padding:2rem;margin-bottom:1.5rem;display:flex;align-items:center;justify-content:space-between;gap:1rem;flex-wrap:wrap}
+.report-candidate-name{font-family:'DM Serif Display',serif;font-size:28px;color:#fff}
+.report-candidate-meta{font-size:13px;color:rgba(255,255,255,.6);margin-top:4px}
+.report-overall-score{text-align:right}
+.report-overall-num{font-family:'DM Serif Display',serif;font-size:48px;color:var(--accent2);line-height:1}
+.report-overall-lbl{font-size:12px;color:rgba(255,255,255,.5);text-transform:uppercase;letter-spacing:.06em;margin-top:4px}
+.report-grade-badge{display:inline-block;padding:4px 16px;border-radius:50px;font-size:13px;font-weight:700;letter-spacing:.04em;margin-top:8px}
+.grade-a{background:rgba(26,107,58,.3);color:#7FE89A}
+.grade-b{background:rgba(45,106,79,.3);color:#5FC4A0}
+.grade-c{background:rgba(232,160,32,.3);color:#F5C842}
+.grade-d{background:rgba(192,57,43,.3);color:#F1948A}
+.report-tests-grid{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-bottom:1.5rem}
+.report-test-card{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:1.25rem}
+.rtc-header{display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:12px}
+.rtc-title{font-size:13px;font-weight:600;color:var(--text)}
+.rtc-score{font-family:'DM Serif Display',serif;font-size:26px;color:var(--brand2)}
+.rtc-score-lbl{font-size:11px;color:var(--text3)}
+.rtc-bar-bg{height:8px;background:var(--surface2);border-radius:4px;overflow:hidden;margin-bottom:10px}
+.rtc-bar-fill{height:100%;border-radius:4px;background:linear-gradient(90deg,var(--brand2),var(--accent));transition:width .6s}
+.rtc-comment{font-size:12px;color:var(--text2);line-height:1.6;font-style:italic;border-left:3px solid var(--border2);padding-left:10px;margin-top:8px}
+.rtc-not-evaluated{font-size:12px;color:var(--text3);font-style:italic}
+.report-overall-comment-card{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:1.5rem;margin-bottom:1.5rem}
+.roc-title{font-size:13px;font-weight:600;color:var(--brand);margin-bottom:10px;text-transform:uppercase;letter-spacing:.06em}
+.roc-text{font-size:15px;color:var(--text2);line-height:1.8}
+.report-strengths-wrap{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-bottom:1.5rem}
+.report-str-card{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:1.25rem}
+.rsc-title{font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:.06em;margin-bottom:10px}
+.rsc-title.strength{color:var(--green)}.rsc-title.weakness{color:var(--red)}
+.rsc-q-row{font-size:12px;color:var(--text2);padding:5px 0;border-bottom:1px solid var(--border);display:flex;justify-content:space-between;gap:8px;align-items:center}
+.rsc-q-row:last-child{border-bottom:none}
+.rsc-q-score{font-weight:600;font-size:13px;flex-shrink:0}
+.score-hi{color:var(--green)}.score-lo{color:var(--red)}
+.btn-print-report{background:var(--accent);color:var(--brand);border:none;border-radius:var(--radius-sm);padding:10px 22px;font-family:'DM Sans',sans-serif;font-size:14px;font-weight:600;cursor:pointer;transition:background .2s}
+.btn-print-report:hover{background:var(--accent2)}
+.report-questions-section{margin-top:1.5rem}
+.rqs-test-block{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);margin-bottom:14px;overflow:hidden}
+.rqs-test-header{background:var(--brand);padding:.8rem 1.25rem;display:flex;justify-content:space-between;align-items:center}
+.rqs-test-title{font-size:13px;font-weight:600;color:#fff}
+.rqs-test-score{font-size:13px;color:var(--accent2);font-weight:600}
+.rqs-q-row{padding:.8rem 1.25rem;border-bottom:1px solid var(--border);display:grid;grid-template-columns:1fr 80px 60px;gap:10px;align-items:start}
+.rqs-q-row:last-child{border-bottom:none}
+.rqs-q-text{font-size:12px;color:var(--text2);line-height:1.5}
+.rqs-q-comment{font-size:11px;color:var(--text3);font-style:italic;margin-top:3px}
+.rqs-q-score{font-size:14px;font-weight:700;text-align:center}
+
+/* ── MODALS ── */
+.modal-overlay{position:fixed;inset:0;background:rgba(0,0,0,.45);display:none;align-items:center;justify-content:center;z-index:999;padding:1rem}
+.modal-overlay.open{display:flex}
+.modal-box{background:var(--surface);border-radius:16px;padding:2rem;max-width:400px;width:100%;text-align:center}
+.modal-title{font-family:'DM Serif Display',serif;font-size:22px;color:var(--brand);margin-bottom:8px}
+.modal-sub{font-size:14px;color:var(--text2);margin-bottom:1.5rem;line-height:1.6}
+.modal-btns{display:flex;gap:10px}
+.btn-modal-cancel{flex:1;padding:11px;border:1px solid var(--border2);border-radius:var(--radius-sm);font-family:'DM Sans',sans-serif;font-size:14px;cursor:pointer;background:transparent;color:var(--text);transition:background .2s}
+.btn-modal-cancel:hover{background:var(--surface2)}
+.btn-modal-confirm{flex:1;padding:11px;border:none;border-radius:var(--radius-sm);font-family:'DM Sans',sans-serif;font-size:14px;font-weight:500;cursor:pointer;background:var(--brand);color:#fff;transition:background .2s}
+.btn-modal-confirm:hover{background:var(--brand2)}
+
+/* ── LOADING ── */
+.loading-overlay{position:fixed;inset:0;background:rgba(247,245,240,.92);display:none;align-items:center;justify-content:center;z-index:9999;flex-direction:column;gap:12px;font-size:15px;color:var(--text2)}
+.loading-overlay.open{display:flex}
+.spinner{width:32px;height:32px;border:3px solid var(--border2);border-top-color:var(--brand);border-radius:50%;animation:spin .7s linear infinite}
+@keyframes spin{to{transform:rotate(360deg)}}
+
+/* ── ADMIN LOGIN ── */
+.admin-login-wrap{min-height:100vh;display:flex;align-items:center;justify-content:center;background:var(--bg);padding:2rem}
+.admin-login-card{background:var(--surface);border:1px solid var(--border);border-radius:20px;padding:2.5rem;max-width:380px;width:100%;text-align:center}
+.login-logo{font-family:'DM Serif Display',serif;font-size:24px;color:var(--brand);margin-bottom:4px}
+.login-sub{font-size:13px;color:var(--text3);margin-bottom:2rem}
+
+@media print {
+  .detail-topbar,.admin-header,.btn-save-eval,.btn-print-report,.btn-exit{display:none!important}
+  body{background:#fff}
+  .report-wrap{padding:0}
+}
+@media(max-width:768px){
+  .auth-wrap{grid-template-columns:1fr}
+  .auth-left{min-height:240px;padding:2rem}
+  .auth-right{padding:1.5rem}
+  .admin-metrics,.progress-overview{grid-template-columns:1fr 1fr}
+  .detail-meta-card{grid-template-columns:1fr 1fr}
+  .done-stats,.report-tests-grid,.report-strengths-wrap{grid-template-columns:1fr}
+  .eval-row{grid-template-columns:1fr}
+}
+</style>
+</head>
+<body>
+
+<!-- FULLSCREEN PROMPT -->
+<div class="modal-overlay open" id="fs-prompt">
+  <div class="modal-box">
+    <div style="font-size:36px;margin-bottom:12px">🖥️</div>
+    <div class="modal-title">Fullscreen Required</div>
+    <div class="modal-sub">This assessment must be taken in fullscreen. Exiting fullscreen during a test will be recorded as a violation.</div>
+    <button class="btn-modal-confirm" id="btn-enter-fs" style="width:100%">Enter Fullscreen & Continue</button>
+  </div>
+</div>
+
+<!-- FULLSCREEN EXIT WARNING -->
+<div class="modal-overlay" id="fs-warn-overlay">
+  <div class="modal-box" style="border:2px solid #C0392B">
+    <div style="font-size:32px;margin-bottom:8px">⚠️</div>
+    <div class="modal-title" style="color:#C0392B">Fullscreen Exited!</div>
+    <div class="modal-sub">You have exited fullscreen. This violation has been recorded.</div>
+    <button class="btn-modal-confirm" id="btn-reenter-fs" style="width:100%;background:#C0392B">Return to Fullscreen</button>
+  </div>
+</div>
+
+<!-- SUBMIT MODAL -->
+<div class="modal-overlay" id="modal">
+  <div class="modal-box">
+    <div class="modal-title" id="modal-title">Submit Test?</div>
+    <div class="modal-sub" id="modal-sub">You cannot change your answers after submission.</div>
+    <div class="modal-btns">
+      <button class="btn-modal-cancel" id="modal-cancel">Go back</button>
+      <button class="btn-modal-confirm" id="modal-confirm">Yes, submit</button>
+    </div>
+  </div>
+</div>
+
+<!-- LOADING -->
+<div class="loading-overlay" id="loading-overlay">
+  <div class="spinner"></div>
+  <div id="loading-msg">Please wait...</div>
+</div>
+
+<!-- SIGNUP -->
+<div class="screen active" id="screen-signup">
+  <div class="auth-wrap">
+    <div class="auth-left">
+      <div><div class="brand-mark">Educart</div><div class="brand-sub">BDM Assessment Portal</div></div>
+      <div class="auth-hero">
+        <h1>Field <em>Readiness</em><br>Test Series</h1>
+        <p>4 structured assessments covering product knowledge, objection handling, academic structure, and education policy.</p>
+      </div>
+      <div class="auth-stats">
+        <div><div class="stat-num">4</div><div class="stat-lbl">Tests</div></div>
+        <div><div class="stat-num">39</div><div class="stat-lbl">Questions</div></div>
+        <div><div class="stat-num">45<span style="font-size:18px">min</span></div><div class="stat-lbl">Per test</div></div>
+      </div>
+    </div>
+    <div class="auth-right">
+      <div class="auth-card">
+        <div class="auth-title">Create Account</div>
+        <div class="auth-sub">Register to access the assessment portal.</div>
+        <div class="field-row">
+          <div class="field"><label>First Name</label><input id="su-fname" placeholder="Priya" autocomplete="off"></div>
+          <div class="field"><label>Last Name</label><input id="su-lname" placeholder="Sharma" autocomplete="off"></div>
+        </div>
+        <div class="field"><label>Email Address</label><input id="su-email" type="email" placeholder="priya@example.com" autocomplete="off"></div>
+        <div class="field"><label>Phone Number</label><input id="su-phone" type="tel" placeholder="+91 98765 43210" autocomplete="off"></div>
+        <div class="field"><label>Password</label><input id="su-pass" type="password" placeholder="Min. 6 characters"></div>
+        <div class="field"><label>Confirm Password</label><input id="su-pass2" type="password" placeholder="Re-enter password"></div>
+        <div class="err-msg" id="su-err"></div>
+        <button class="btn-primary" id="btn-signup">Create Account</button>
+        <div class="auth-toggle">Already have an account? <a id="goto-login">Sign in →</a></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- LOGIN -->
+<div class="screen" id="screen-login">
+  <div class="auth-wrap">
+    <div class="auth-left">
+      <div><div class="brand-mark">Educart</div><div class="brand-sub">BDM Assessment Portal</div></div>
+      <div class="auth-hero"><h1>Welcome <em>Back</em></h1><p>Sign in to continue your assessment or check your progress.</p></div>
+      <div class="auth-stats">
+        <div><div class="stat-num">4</div><div class="stat-lbl">Tests</div></div>
+        <div><div class="stat-num">39</div><div class="stat-lbl">Questions</div></div>
+        <div><div class="stat-num">45<span style="font-size:18px">min</span></div><div class="stat-lbl">Per test</div></div>
+      </div>
+    </div>
+    <div class="auth-right">
+      <div class="auth-card">
+        <div class="auth-title">Sign In</div>
+        <div class="auth-sub">Use your registered email and password.</div>
+        <div class="field"><label>Email Address</label><input id="li-email" type="email" placeholder="priya@example.com" autocomplete="off"></div>
+        <div class="field"><label>Password</label><input id="li-pass" type="password" placeholder="Your password"></div>
+        <div class="err-msg" id="li-err"></div>
+        <button class="btn-primary" id="btn-login">Sign In</button>
+        <div class="auth-toggle">Don't have an account? <a id="goto-signup">Create one →</a></div>
+        <div class="divider">or</div>
+        <div style="text-align:center"><a id="goto-admin-from-login" style="font-size:12px;color:var(--text3);text-decoration:none;cursor:pointer">Admin Portal →</a></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- DASHBOARD -->
+<div class="screen" id="screen-dashboard">
+  <div class="dash-header">
+    <div class="dash-brand">Educart</div>
+    <div class="dash-user">
+      <div class="avatar" id="dash-avatar">P</div>
+      <div class="dash-name" id="dash-name">Candidate</div>
+      <button class="btn-logout" id="btn-logout">Sign Out</button>
+    </div>
+  </div>
+  <div class="dash-body">
+    <div class="dash-greeting" id="dash-greeting">Hello!</div>
+    <div class="dash-sub" id="dash-sub-text">Complete all 4 assessments below.</div>
+    <div class="progress-overview" id="progress-overview"></div>
+    <div class="section-title">Your Assessments</div>
+    <div class="tests-grid" id="tests-grid"></div>
+    <div class="admin-link-row"><a id="goto-admin-dash">Admin Portal →</a></div>
+  </div>
+</div>
+
+<!-- TEST -->
+<div class="screen" id="screen-test">
+  <div class="test-topbar">
+    <div><div class="topbar-brand">Educart</div><div class="topbar-info" id="topbar-info"></div></div>
+    <div id="timer" class="timer">45:00</div>
+  </div>
+  <div class="progress-bar"><div class="progress-fill" id="progress-fill" style="width:0%"></div></div>
+  <div class="test-body">
+    <div class="warn-banner" id="warn-banner"></div>
+    <div class="q-dots" id="q-dots"></div>
+    <div class="q-header">
+      <div class="q-counter" id="q-counter"></div>
+      <div class="q-type-badge" id="q-type-badge"></div>
+    </div>
+    <div class="question-card">
+      <div class="q-text" id="q-text"></div>
+      <div class="q-hint" id="q-hint"></div>
+      <textarea class="answer-area" id="ans-input" placeholder="Write your answer here..."></textarea>
+      <div class="word-count" id="word-count">0 words</div>
+    </div>
+    <div class="q-nav-row">
+      <button class="btn-nav" id="btn-prev">← Previous</button>
+      <button class="btn-nav btn-nav-danger" id="btn-submit-early">Submit Test</button>
+      <button class="btn-nav btn-nav-primary" id="btn-next">Save & Next →</button>
+    </div>
+  </div>
+</div>
+
+<!-- DONE -->
+<div class="screen" id="screen-done">
+  <div class="done-card">
+    <div class="done-icon">✓</div>
+    <div class="done-title">Test Submitted!</div>
+    <div class="done-sub" id="done-sub">Your responses have been recorded.</div>
+    <div class="done-stats">
+      <div class="done-stat"><div class="done-stat-val" id="done-answered">0</div><div class="done-stat-lbl">Answered</div></div>
+      <div class="done-stat"><div class="done-stat-val" id="done-time">0m</div><div class="done-stat-lbl">Time taken</div></div>
+      <div class="done-stat"><div class="done-stat-val" id="done-flags">0</div><div class="done-stat-lbl">Violations</div></div>
+    </div>
+    <button class="btn-primary" id="btn-back-dash" style="margin-top:0">← Back to Dashboard</button>
+  </div>
+</div>
+
+<!-- ADMIN -->
+<div class="screen" id="screen-admin"></div>
+
+<script>
+// ═══════════════════════════════════════════════
+// CONFIG
+// ═══════════════════════════════════════════════
+const GOOGLE_SCRIPT_URL = 'https://educar-trainee-test.educart-developer.workers.dev';
+const ADMIN_PASSWORD    = 'Educart@2026';
+const MAX_SCORE_PER_Q   = 10; // each question scored out of 10
+
+// ═══════════════════════════════════════════════
+// TEST DATA
+// ═══════════════════════════════════════════════
+const TESTS = [
+  {id:1,title:'QB Readiness & Product Knowledge',color:'t1',duration:45,questions:[
+    {id:'1a',text:'Why is the 2026–27 CBSE exam pattern different from previous years? Explain in simple language.',type:'long',hint:'Think about competency-based learning and pattern changes.'},
+    {id:'1b',text:"What does '50% competency-based questions' actually mean for a student preparing for boards?",type:'long',hint:'Focus on what this change means practically for students.'},
+    {id:'1c',text:'Explain the difference between a Textbook, a Reference Book, and a Question Bank.',type:'long',hint:'Think about purpose, usage, and who uses each.'},
+    {id:'1d',text:"Why is it called a Question 'Bank'? What is the analogy behind the name?",type:'short',hint:'Brief and crisp — 3–4 sentences is enough.'},
+    {id:'1e',text:'Why do traditional books fail in 2026–27 even if they were successful in earlier years?',type:'long',hint:'Connect to the pattern change.'},
+    {id:'1f',text:"A teacher says: 'NCERT is enough. Why extra books?' How do you respond?",type:'long',hint:'Be persuasive but respectful.'},
+    {id:'1g',text:'Differentiate between NCERT, RD Sharma, and Educart Question Bank. What is each best suited for?',type:'long',hint:'Use a comparison approach.'},
+    {id:'1h',text:'Give a 1-minute pitch on the Educart Question Bank (write it as you would speak it).',type:'long',hint:'Write naturally, as if speaking to a teacher.'},
+    {id:'1i',text:'What are the key parameters to evaluate a good academic book?',type:'long',hint:'Think about what a teacher or parent would look for.'},
+    {id:'1j',text:'What specific problem does the Educart QB solve for board exam preparation?',type:'short',hint:'Be direct and concise.'},
+  ]},
+  {id:2,title:'Scenario Handling & Objection Management',color:'t2',duration:45,questions:[
+    {id:'2a',text:"[Scenario 1] A teacher says: 'We already use RD Sharma for Maths. Students are doing fine.' List 5 questions you would ask this teacher.",type:'long',hint:'Use open-ended questions to uncover pain points.'},
+    {id:'2b',text:'[Scenario 1 continued] How would you reposition Educart QB against RD Sharma to this teacher?',type:'long',hint:'Focus on what QB offers that RD Sharma does not in the new pattern.'},
+    {id:'2c',text:"[Scenario 2] Teacher asks: 'What are the unique features / USPs of your QB?' Write your answer.",type:'long',hint:'Be specific — features, not just benefits.'},
+    {id:'2d',text:"[Scenario 2 continued] Teacher asks: 'How can I review the answers attempted by toppers?' What do you say?",type:'short',hint:'Quick and factual.'},
+    {id:'2e',text:"[Scenario 2 continued] Teacher says: 'I have too many books from other publishers. Not required.' How do you respond?",type:'long',hint:'Acknowledge, then differentiate.'},
+    {id:'2f',text:"[Scenario 2 continued] Teacher asks: 'How can I become a part of the specimen program?' Explain the process.",type:'short',hint:'Step by step, keep it simple.'},
+    {id:'2g',text:"[Scenario 3 – Price Objection] Coordinator says: 'Educart is more expensive than local publishers.' Write your full response.",type:'long',hint:'Justify value, not price.'},
+    {id:'2h',text:'[Role Play] You have 5 minutes with the Head of Department. Write your complete 5-minute pitch.',type:'long',hint:'Structure: hook → problem → solution → proof → call to action.'},
+  ]},
+  {id:3,title:'Academic & Board Structure',color:'t3',duration:45,questions:[
+    {id:'3a',text:"'Teachers and schools are the real customers.' How and why — explain this from a sales perspective.",type:'long',hint:'Think about decision-making power in schools.'},
+    {id:'3b',text:'What is the difference between NCERT and CBSE? Many people confuse them — clarify.',type:'short',hint:'Clear, simple, no jargon.'},
+    {id:'3c',text:'Explain the new exam pattern introduced for 2026–27 as per the CBSE update.',type:'long',hint:'Include specifics: MCQs, CBQs, percentages, etc.'},
+    {id:'3d',text:'Explain the academic calendar of a typical CBSE school. What are the key phases?',type:'long',hint:'Think: admissions, syllabus start, mid-terms, boards, summer, repeat.'},
+    {id:'3e',text:'If you had to choose ONE month to maximise Educart book sales, which month and why?',type:'short',hint:'Think about the purchase cycle.'},
+    {id:'3f',text:'What is the difference between a Question Bank (QB) and a One-Shot revision book?',type:'short',hint:'Think purpose, timing, depth.'},
+    {id:'3g',text:"Why is CBSE Educart's core target market? Explain strategically.",type:'long',hint:'Think scale, standardisation, and demand.'},
+    {id:'3h',text:'What are the Go-To-Market (GTM) strategies of Educart? List and explain.',type:'long',hint:'Think channels, partnerships, digital, ground.'},
+    {id:'3i',text:'How can a BDM leverage summer vacation to build strong rapport with teachers? Give a concrete plan.',type:'long',hint:'Be practical — what would you actually do?'},
+    {id:'3j',text:'What happens when a teacher recommends your book in class? What is more powerful — free samples or explaining content? Why?',type:'long',hint:'Three parts — answer all three.'},
+    {id:'3k',text:'What are the different teacher engagement initiatives taken by Educart?',type:'long',hint:'Include training, awards, content involvement, etc.'},
+    {id:'3l',text:"Describe the 'last 4 months strategy' of an academic year and where Educart takes the lead.",type:'long',hint:'Think: revision season, mock tests, board prep.'},
+  ]},
+  {id:4,title:'NEP, NCF & Education Policy',color:'t4',duration:45,questions:[
+    {id:'4a',text:'What is the full form of NEP and NCF? When were they created?',type:'short',hint:'Factual — be precise.'},
+    {id:'4b',text:'What is the primary aim of NEP 2020 in India? Explain in 4–5 sentences.',type:'long',hint:'Cover the broad vision, not just one point.'},
+    {id:'4c',text:'What is the 5+3+3+4 educational structure model? Explain each stage.',type:'long',hint:'Cover age groups and what each stage focuses on.'},
+    {id:'4d',text:'What is the NIPUN Bharat Mission? What are its objectives?',type:'long',hint:'Focus on foundational literacy and numeracy.'},
+    {id:'4e',text:'What is CPD Training? What are the targets associated with it?',type:'long',hint:'CPD = Continuing Professional Development.'},
+    {id:'4f',text:'How will you use your knowledge of NEP and NCF in conversations with school leadership? Give 3 examples.',type:'long',hint:'Make it conversational and practical.'},
+    {id:'4g',text:'Connect the following chain and explain each link: Policy → Classroom → Book → Sale/Reference',type:'long',hint:'Show how each stage flows into the next.'},
+    {id:'4h',text:'How does NEP 2020 change the role of a teacher? What new responsibilities does a teacher now have?',type:'long',hint:'Think: facilitator, assessor, co-learner.'},
+    {id:'4i',text:'How do Educart books align with NEP 2020 goals? Give specific examples.',type:'long',hint:'Connect book features to NEP principles.'},
+  ]},
+];
+
+// ═══════════════════════════════════════════════
+// STATE
+// ═══════════════════════════════════════════════
+let S = {
+  user:null, test:null, qIdx:0, answers:{}, startTime:null,
+  timerInt:null, timeLeft:0, tabSwitches:0, adminAuthed:false,
+};
+
+// ═══════════════════════════════════════════════
+// STORAGE
+// ═══════════════════════════════════════════════
+const getUsers      = () => JSON.parse(localStorage.getItem('bdm_users')    ||'[]');
+const saveUsers     = d  => localStorage.setItem('bdm_users',    JSON.stringify(d));
+const getResponses  = () => JSON.parse(localStorage.getItem('bdm_resp')     ||'[]');
+const saveResponses = d  => localStorage.setItem('bdm_resp',     JSON.stringify(d));
+const getSession    = () => JSON.parse(localStorage.getItem('bdm_session')  ||'null');
+const saveSession   = d  => localStorage.setItem('bdm_session',  JSON.stringify(d));
+const clearSession  = () => localStorage.removeItem('bdm_session');
+
+// ═══════════════════════════════════════════════
+// UTILS
+// ═══════════════════════════════════════════════
+const $          = id  => document.getElementById(id);
+const ft         = s   => `${Math.floor(s/60)}:${(s%60).toString().padStart(2,'0')}`;
+const wc         = t   => t.trim()?t.trim().split(/\s+/).length:0;
+const showScreen = id  => { document.querySelectorAll('.screen').forEach(s=>s.classList.remove('active')); $(id).classList.add('active'); };
+const showErr    = (id,msg) => { const e=$(id); e.textContent=msg; e.style.display='block'; };
+const hideErr    = id  => { const e=$(id); e.style.display='none'; };
+const initials   = name=> name.trim().split(' ').map(w=>w[0]).join('').toUpperCase().slice(0,2);
+const loading    = (show,msg='Please wait...')=>{ $('loading-overlay').classList.toggle('open',show); $('loading-msg').textContent=msg; };
+const hasCompleted=(email,testId)=>getResponses().some(r=>r.email===email&&r.testId===testId);
+
+function getGrade(pct){
+  if(pct>=85) return {label:'Excellent',cls:'grade-a'};
+  if(pct>=70) return {label:'Good',cls:'grade-b'};
+  if(pct>=50) return {label:'Average',cls:'grade-c'};
+  return {label:'Needs Improvement',cls:'grade-d'};
+}
+
+// ═══════════════════════════════════════════════
+// FULLSCREEN & ANTI-CHEAT
+// ═══════════════════════════════════════════════
+window.addEventListener('load',()=>{
+  $('btn-enter-fs').onclick=()=>{ requestFS(); $('fs-prompt').classList.remove('open'); };
+  $('btn-reenter-fs').onclick=()=>{ requestFS(); $('fs-warn-overlay').classList.remove('open'); };
+  if(document.fullscreenElement) $('fs-prompt').classList.remove('open');
+});
+function requestFS(){ const el=document.documentElement; if(el.requestFullscreen) el.requestFullscreen(); else if(el.webkitRequestFullscreen) el.webkitRequestFullscreen(); }
+document.addEventListener('fullscreenchange',onFsChange);
+document.addEventListener('webkitfullscreenchange',onFsChange);
+function onFsChange(){
+  const inFs=!!(document.fullscreenElement||document.webkitFullscreenElement);
+  if(!inFs&&$('screen-test').classList.contains('active')){
+    S.tabSwitches++;
+    $('fs-warn-overlay').classList.add('open');
+    const wb=$('warn-banner'); if(wb){wb.style.display='block';wb.textContent=`⚠ Fullscreen exit detected (${S.tabSwitches}x) — recorded.`;}
+  }
+}
+function onVisibility(){
+  if(!$('screen-test').classList.contains('active')) return;
+  if(document.hidden){ S.tabSwitches++; const wb=$('warn-banner'); if(wb){wb.style.display='block';wb.textContent=`⚠ Tab switch detected (${S.tabSwitches}x) — recorded.`;} }
+}
+
+// ── Block copy / paste / right-click everywhere ──
+document.addEventListener('contextmenu', e=>e.preventDefault());
+document.addEventListener('copy',  e=>e.preventDefault());
+document.addEventListener('cut',   e=>e.preventDefault());
+document.addEventListener('paste', e=>e.preventDefault());
+document.addEventListener('keydown', e=>{
+  const ctrl=e.ctrlKey||e.metaKey;
+  if(ctrl){ const k=e.key.toLowerCase(); if(['c','x','v','a','u','s','p'].includes(k)) e.preventDefault(); if(e.shiftKey&&['i','j','c'].includes(k)) e.preventDefault(); }
+  if(e.key==='F12') e.preventDefault();
+});
+
+// ═══════════════════════════════════════════════
+// AUTH — SIGNUP
+// ═══════════════════════════════════════════════
+$('btn-signup').onclick=()=>{
+  hideErr('su-err');
+  const fname=$('su-fname').value.trim(), lname=$('su-lname').value.trim();
+  const email=$('su-email').value.trim().toLowerCase(), phone=$('su-phone').value.trim();
+  const pass=$('su-pass').value, pass2=$('su-pass2').value;
+  if(!fname||!lname) return showErr('su-err','Please enter your full name.');
+  if(!email||!email.includes('@')) return showErr('su-err','Please enter a valid email address.');
+  if(!phone) return showErr('su-err','Please enter your phone number.');
+  if(pass.length<6) return showErr('su-err','Password must be at least 6 characters.');
+  if(pass!==pass2) return showErr('su-err','Passwords do not match.');
+  const users=getUsers();
+  if(users.find(u=>u.email===email)) return showErr('su-err','An account with this email already exists.');
+  const user={id:Date.now(),fname,lname,name:fname+' '+lname,email,phone,pass,createdAt:new Date().toLocaleString('en-IN')};
+  users.push(user); saveUsers(users); saveSession(user); S.user=user;
+  sendSignupToSheets(user);
+  renderDashboard(); showScreen('screen-dashboard');
+};
+$('goto-login').onclick=()=>showScreen('screen-login');
+$('goto-signup').onclick=()=>showScreen('screen-signup');
+$('goto-admin-from-login').onclick=()=>showAdminLogin();
+
+// ═══════════════════════════════════════════════
+// AUTH — LOGIN
+// ═══════════════════════════════════════════════
+$('btn-login').onclick=()=>{
+  hideErr('li-err');
+  const email=$('li-email').value.trim().toLowerCase(), pass=$('li-pass').value;
+  if(!email||!pass) return showErr('li-err','Please enter your email and password.');
+  const user=getUsers().find(u=>u.email===email&&u.pass===pass);
+  if(!user) return showErr('li-err','Incorrect email or password.');
+  saveSession(user); S.user=user; renderDashboard(); showScreen('screen-dashboard');
+};
+$('li-pass').onkeydown=e=>{ if(e.key==='Enter') $('btn-login').click(); };
+
+// ═══════════════════════════════════════════════
+// DASHBOARD
+// ═══════════════════════════════════════════════
+function renderDashboard(){
+  const u=S.user;
+  $('dash-avatar').textContent=initials(u.name);
+  $('dash-name').textContent=u.name;
+  $('dash-greeting').textContent=`Hello, ${u.fname}!`;
+  const completed=TESTS.filter(t=>hasCompleted(u.email,t.id)).length;
+  const remaining=4-completed;
+  $('dash-sub-text').textContent=completed===4?'You have completed all 4 assessments. Well done!':`${completed} of 4 tests completed. ${remaining} remaining.`;
+  $('progress-overview').innerHTML=`
+    <div class="prog-card"><div class="prog-card-num" style="color:var(--brand2)">${completed}</div><div class="prog-card-lbl">Completed</div></div>
+    <div class="prog-card"><div class="prog-card-num" style="color:var(--accent)">${remaining}</div><div class="prog-card-lbl">Remaining</div></div>
+    <div class="prog-card"><div class="prog-card-num">4</div><div class="prog-card-lbl">Total tests</div></div>
+    <div class="prog-card"><div class="prog-card-num">45<span style="font-size:16px">m</span></div><div class="prog-card-lbl">Per test</div></div>`;
+  $('tests-grid').innerHTML=TESTS.map(t=>{
+    const done=hasCompleted(u.email,t.id);
+    return `<div class="test-card ${done?'completed':'available'}">
+      <div class="tc-left"><div class="tc-num ${t.color}">T${t.id}</div>
+        <div><div class="tc-title">${t.title}</div><div class="tc-meta">${t.questions.length} questions · ${t.duration} min · ${done?'Completed':'Not attempted'}</div></div>
+      </div>
+      ${done?`<span class="tc-badge badge-done">✓ Done</span>`:`<button class="tc-badge badge-available" data-id="${t.id}">Start →</button>`}
+    </div>`;
+  }).join('');
+  $('tests-grid').querySelectorAll('.badge-available').forEach(b=>{ b.onclick=()=>startTest(+b.dataset.id); });
+}
+$('btn-logout').onclick=()=>{ clearSession(); S.user=null; showScreen('screen-login'); };
+$('goto-admin-dash').onclick=e=>{ e.preventDefault(); showAdminLogin(); };
+
+// ═══════════════════════════════════════════════
+// TEST ENGINE
+// ═══════════════════════════════════════════════
+function startTest(id){
+  if(hasCompleted(S.user.email,id)){ alert('You have already completed this test.'); return; }
+  S.test=TESTS.find(t=>t.id===id); S.qIdx=0; S.answers={}; S.tabSwitches=0;
+  S.timeLeft=S.test.duration*60; S.startTime=Date.now();
+  showScreen('screen-test'); renderQ(); startTimer();
+  document.addEventListener('visibilitychange',onVisibility);
+}
+function renderQ(){
+  const t=S.test,q=t.questions[S.qIdx],total=t.questions.length;
+  $('topbar-info').textContent=`${t.title} — Q${S.qIdx+1}/${total}`;
+  $('timer').textContent=ft(S.timeLeft);
+  $('progress-fill').style.width=`${((S.qIdx+1)/total)*100}%`;
+  $('q-counter').textContent=`Question ${S.qIdx+1} of ${total}`;
+  $('q-type-badge').textContent=q.type==='long'?'Detailed answer':'Short answer';
+  $('q-type-badge').className='q-type-badge '+(q.type==='long'?'q-type-long':'q-type-short');
+  $('q-text').textContent=q.text;
+  $('q-hint').textContent=q.hint?`💡 ${q.hint}`:'';
+  const ans=S.answers[q.id]||'';
+  $('ans-input').value=ans;
+  $('word-count').textContent=`${wc(ans)} words`;
+  $('ans-input').oninput=()=>$('word-count').textContent=`${wc($('ans-input').value)} words`;
+  $('btn-prev').disabled=S.qIdx===0;
+  $('btn-next').textContent=S.qIdx===total-1?'Review & Submit':'Save & Next →';
+  renderDots();
+}
+function renderDots(){
+  $('q-dots').innerHTML=S.test.questions.map((q,i)=>`<div class="q-dot ${i===S.qIdx?'current':S.answers[q.id]?'answered':''}" data-i="${i}">${i+1}</div>`).join('');
+  $('q-dots').querySelectorAll('.q-dot').forEach(d=>{ d.onclick=()=>{ saveAns(); S.qIdx=+d.dataset.i; renderQ(); }; });
+}
+function saveAns(){ S.answers[S.test.questions[S.qIdx].id]=$('ans-input').value; }
+function startTimer(){
+  clearInterval(S.timerInt);
+  S.timerInt=setInterval(()=>{
+    S.timeLeft--; const el=$('timer');
+    if(el){el.textContent=ft(S.timeLeft);el.classList.toggle('urgent',S.timeLeft<=300);}
+    if(S.timeLeft<=0){clearInterval(S.timerInt);doSubmit(true);}
+  },1000);
+}
+$('btn-prev').onclick=()=>{ saveAns(); S.qIdx--; renderQ(); };
+$('btn-next').onclick=()=>{
+  saveAns();
+  if(S.qIdx<S.test.questions.length-1){S.qIdx++;renderQ();}
+  else showModal('Submit Test?','Once submitted, you cannot retake this test.',()=>doSubmit(false));
+};
+$('btn-submit-early').onclick=()=>showModal('Submit early?','Are you sure? This test can only be taken once.',()=>doSubmit(false));
+function showModal(title,sub,onConfirm){
+  $('modal-title').textContent=title;$('modal-sub').textContent=sub;
+  $('modal').classList.add('open');
+  $('modal-confirm').onclick=()=>{ $('modal').classList.remove('open'); onConfirm(); };
+}
+$('modal-cancel').onclick=()=>$('modal').classList.remove('open');
+
+async function doSubmit(auto){
+  saveAns(); clearInterval(S.timerInt);
+  document.removeEventListener('visibilitychange',onVisibility);
+  const elapsed=Math.round((Date.now()-S.startTime)/1000);
+  const answeredCount=Object.values(S.answers).filter(v=>v&&v.trim()).length;
+  const rec={
+    id:Date.now(), name:S.user.name, email:S.user.email, phone:S.user.phone,
+    testId:S.test.id, testTitle:S.test.title, answers:{...S.answers},
+    tabSwitches:S.tabSwitches, timeTaken:elapsed, autoSubmit:auto,
+    submittedAt:new Date().toLocaleString('en-IN'), notes:{},
+    scores:{}, comments:{}, overallComment:'', evaluated:false
+  };
+  const all=getResponses(); all.push(rec); saveResponses(all);
+  $('done-answered').textContent=answeredCount;
+  $('done-time').textContent=Math.round(elapsed/60)+'m';
+  $('done-flags').textContent=S.tabSwitches;
+  $('done-sub').textContent=auto?'Time ran out — your answers were auto-submitted.':'Your responses have been recorded. You cannot retake this test.';
+  showScreen('screen-done');
+  sendToSheets(rec);
+}
+
+// ═══════════════════════════════════════════════
+// GOOGLE SHEETS
+// ═══════════════════════════════════════════════
+async function sendToSheets(rec){
+  if(GOOGLE_SCRIPT_URL==='YOUR_GOOGLE_APPS_SCRIPT_URL_HERE') return;
+  try {
+    const flat={type:'submission',name:rec.name,email:rec.email,phone:rec.phone,testId:rec.testId,testTitle:rec.testTitle,tabSwitches:rec.tabSwitches,timeTaken:rec.timeTaken,autoSubmit:rec.autoSubmit,submittedAt:rec.submittedAt};
+    TESTS.find(t=>t.id===rec.testId).questions.forEach((q,i)=>{flat[`Q${i+1}`]=rec.answers[q.id]||'';});
+    await fetch(GOOGLE_SCRIPT_URL,{method:'POST',body:JSON.stringify(flat)});
+  } catch(e){}
+}
+async function sendSignupToSheets(user){
+  if(GOOGLE_SCRIPT_URL==='YOUR_GOOGLE_APPS_SCRIPT_URL_HERE') return;
+  try { await fetch(GOOGLE_SCRIPT_URL,{method:'POST',body:JSON.stringify({type:'signup',name:user.name,email:user.email,phone:user.phone||'',createdAt:user.createdAt})}); } catch(e){}
+}
+
+// ─────────────────────────────────────────────
+// GOOGLE SHEETS — Push evaluation scores
+// Called every time admin saves an evaluation.
+// Uses submissionId as a unique key so the Apps
+// Script can upsert (update if exists, else add).
+// ─────────────────────────────────────────────
+async function sendEvalToSheets(rec, testDef){
+  if(GOOGLE_SCRIPT_URL==='YOUR_GOOGLE_APPS_SCRIPT_URL_HERE') return;
+  try {
+    const maxScore = testDef.questions.length * MAX_SCORE_PER_Q;
+    const totalScore = Object.values(rec.scores||{}).reduce((a,b)=>a+(+b||0),0);
+    const pct = Math.round((totalScore/maxScore)*100);
+    const payload = {
+      type:          'evaluation',
+      submissionId:  String(rec.id),
+      evaluatedAt:   new Date().toLocaleString('en-IN'),
+      name:          rec.name,
+      email:         rec.email,
+      phone:         rec.phone || '',
+      testId:        rec.testId,
+      testTitle:     rec.testTitle,
+      totalScore:    totalScore,
+      maxScore:      maxScore,
+      percentage:    pct,
+      grade:         pct>=85?'Excellent':pct>=70?'Good':pct>=50?'Average':'Needs Improvement',
+      overallComment:rec.overallComment || '',
+      tabSwitches:   rec.tabSwitches || 0,
+      autoSubmit:    rec.autoSubmit ? 'Yes' : 'No',
+    };
+    testDef.questions.forEach((q, i) => {
+      payload[`Q${i+1}_score`]   = rec.scores&&rec.scores[q.id]!==undefined ? rec.scores[q.id] : '';
+      payload[`Q${i+1}_comment`] = rec.comments&&rec.comments[q.id] ? rec.comments[q.id] : '';
+    });
+    await fetch(GOOGLE_SCRIPT_URL, { method:'POST', body: JSON.stringify(payload) });
+  } catch(e){}
+}
+
+$('btn-back-dash').onclick=()=>{ renderDashboard(); showScreen('screen-dashboard'); };
+
+// ═══════════════════════════════════════════════
+// ADMIN LOGIN
+// ═══════════════════════════════════════════════
+function showAdminLogin(){
+  $('screen-admin').innerHTML=`<div class="admin-login-wrap"><div class="admin-login-card">
+    <div class="login-logo">Educart Admin</div>
+    <div class="login-sub">Assessment Portal</div>
+    <div class="field" style="text-align:left"><label>Password</label><input id="admin-pass" type="password" placeholder="Admin password"></div>
+    <div class="err-msg" id="admin-err" style="text-align:left;margin-bottom:8px"></div>
+    <button class="btn-primary" id="btn-admin-login">Login</button>
+    <div style="margin-top:12px"><a id="admin-back" style="font-size:13px;color:var(--text3);text-decoration:none;cursor:pointer">← Back</a></div>
+  </div></div>`;
+  showScreen('screen-admin');
+  $('btn-admin-login').onclick=()=>{
+    if($('admin-pass').value===ADMIN_PASSWORD){S.adminAuthed=true;renderAdmin();}
+    else showErr('admin-err','Incorrect password.');
+  };
+  $('admin-pass').onkeydown=e=>{ if(e.key==='Enter') $('btn-admin-login').click(); };
+  $('admin-back').onclick=e=>{ e.preventDefault(); if(S.user){renderDashboard();showScreen('screen-dashboard');}else showScreen('screen-login'); };
+}
+
+// ═══════════════════════════════════════════════
+// ADMIN DASHBOARD
+// ═══════════════════════════════════════════════
+function renderAdmin(){
+  const responses=getResponses(), users=getUsers();
+  const flagged=responses.filter(r=>r.tabSwitches>0).length;
+  const evaluated=responses.filter(r=>r.evaluated).length;
+  $('screen-admin').innerHTML=`
+    <div class="admin-header">
+      <div class="admin-header-title">Admin Portal</div>
+      <div style="display:flex;gap:8px">
+        <button class="btn-exit" id="btn-clear" style="background:rgba(192,57,43,.3);border-color:rgba(192,57,43,.5)">Clear Responses</button>
+        <button class="btn-exit" id="btn-admin-exit">← Exit</button>
+      </div>
+    </div>
+    <div class="admin-body">
+      <div class="admin-metrics">
+        <div class="admin-metric"><div class="admin-metric-val">${users.length}</div><div class="admin-metric-lbl">Registered</div></div>
+        <div class="admin-metric"><div class="admin-metric-val">${responses.length}</div><div class="admin-metric-lbl">Submissions</div></div>
+        <div class="admin-metric"><div class="admin-metric-val">${evaluated}</div><div class="admin-metric-lbl">Evaluated</div></div>
+        <div class="admin-metric"><div class="admin-metric-val">${flagged}</div><div class="admin-metric-lbl">Flagged</div></div>
+      </div>
+      <div class="admin-tabs">
+        <div class="admin-tab active" id="tab-submissions">Submissions (${responses.length})</div>
+        <div class="admin-tab" id="tab-candidates">Candidates (${users.length})</div>
+      </div>
+      <div id="admin-tab-content"></div>
+    </div>`;
+  $('btn-admin-exit').onclick=()=>{ S.adminAuthed=false; if(S.user){renderDashboard();showScreen('screen-dashboard');}else showScreen('screen-login'); };
+  $('btn-clear').onclick=()=>{ if(confirm('Delete ALL responses?')){localStorage.removeItem('bdm_resp');renderAdmin();} };
+  $('tab-submissions').onclick=()=>{ $('tab-submissions').classList.add('active');$('tab-candidates').classList.remove('active');renderSubmissionsTab(); };
+  $('tab-candidates').onclick=()=>{ $('tab-candidates').classList.add('active');$('tab-submissions').classList.remove('active');renderCandidatesTab(); };
+  renderSubmissionsTab();
+}
+
+function renderSubmissionsTab(){
+  const responses=getResponses().slice().reverse();
+  const c=$('admin-tab-content');
+  if(!responses.length){c.innerHTML=`<div class="empty-state"><div style="font-size:40px">📋</div><p>No submissions yet.</p></div>`;return;}
+  c.innerHTML=responses.map(r=>{
+    const t=TESTS.find(x=>x.id===r.testId);
+    const maxScore=t?t.questions.length*MAX_SCORE_PER_Q:100;
+    const scored=r.evaluated?Object.values(r.scores||{}).reduce((a,b)=>a+(+b||0),0):null;
+    const pct=scored!==null?Math.round((scored/maxScore)*100):null;
+    return `<div class="response-row">
+      <div style="flex:1;min-width:0">
+        <div class="resp-name">${r.name}</div>
+        <div class="resp-meta">${r.email} · ${r.submittedAt}</div>
+      </div>
+      <div style="display:flex;gap:6px;flex-wrap:wrap;align-items:center">
+        <span class="tag tag-t${r.testId}">Test ${r.testId}</span>
+        ${r.tabSwitches>0?`<span class="tag tag-flag">⚠ ${r.tabSwitches}</span>`:`<span class="tag tag-clean">Clean</span>`}
+        ${r.autoSubmit?`<span class="tag" style="background:#FDEDEC;color:#A32D2D">Timeout</span>`:''}
+        ${r.evaluated?`<span class="tag tag-evaluated">✓ ${pct}%</span>`:`<span class="tag" style="background:var(--surface2);color:var(--text3)">Pending</span>`}
+      </div>
+      <button class="btn-review" data-rid="${r.id}">${r.evaluated?'View / Edit →':'Evaluate →'}</button>
+    </div>`;
+  }).join('');
+  c.querySelectorAll('.btn-review').forEach(b=>{ b.onclick=()=>renderEvalDetail(+b.dataset.rid); });
+}
+
+function renderCandidatesTab(){
+  const users=getUsers(), c=$('admin-tab-content');
+  if(!users.length){c.innerHTML=`<div class="empty-state"><div style="font-size:40px">👤</div><p>No candidates registered yet.</p></div>`;return;}
+  c.innerHTML=users.map(u=>{
+    const done=TESTS.filter(t=>hasCompleted(u.email,t.id));
+    const recs=getResponses().filter(r=>r.email===u.email);
+    const allEvaluated=done.length===4&&recs.filter(r=>r.evaluated).length===4;
+    return `<div class="candidate-row">
+      <div style="flex:1">
+        <div class="resp-name">${u.name}</div>
+        <div class="resp-meta">${u.email} · ${u.phone||'—'} · Joined ${u.createdAt}</div>
+      </div>
+      <div style="display:flex;align-items:center;gap:12px">
+        <div class="progress-pips">${TESTS.map(t=>{
+          const rec=recs.find(r=>r.testId===t.id);
+          const cls=rec?rec.evaluated?'evaluated pip done':'pip done':'pip';
+          return `<div class="${cls}" title="Test ${t.id}${rec&&rec.evaluated?' — Evaluated':''}"></div>`;
+        }).join('')}</div>
+        <span style="font-size:12px;color:var(--text3)">${done.length}/4 done</span>
+        ${allEvaluated?`<button class="btn-review" data-email="${u.email}">📊 Report</button>`:''}
+      </div>
+    </div>`;
+  }).join('');
+  c.querySelectorAll('.btn-review[data-email]').forEach(b=>{ b.onclick=()=>renderCandidateReport(b.dataset.email); });
+}
+
+// ═══════════════════════════════════════════════
+// EVALUATION DETAIL
+// ═══════════════════════════════════════════════
+function renderEvalDetail(rid){
+  const all=getResponses(), r=all.find(x=>x.id===rid);
+  if(!r) return;
+  const t=TESTS.find(x=>x.id===r.testId);
+  const maxScore=t.questions.length*MAX_SCORE_PER_Q;
+  const s=$('screen-admin');
+
+  const totalScored=Object.values(r.scores||{}).reduce((a,b)=>a+(+b||0),0);
+  const pct=r.evaluated?Math.round((totalScored/maxScore)*100):0;
+
+  s.innerHTML=`
+    <div class="detail-topbar">
+      <button class="btn-exit" id="btn-back-list" style="background:transparent;border-color:var(--border2);color:var(--text)">← All Submissions</button>
+      <div style="font-weight:600;font-size:15px;flex:1">${r.name} — ${r.testTitle}</div>
+      <span class="tag ${r.tabSwitches>0?'tag-flag':'tag-clean'}">${r.tabSwitches>0?r.tabSwitches+' violation(s)':'Clean'}</span>
+    </div>
+    <div class="detail-body">
+      <div class="detail-meta-card">
+        <div><div class="dm-item-lbl">Submitted</div><div class="dm-item-val">${r.submittedAt}</div></div>
+        <div><div class="dm-item-lbl">Time Taken</div><div class="dm-item-val">${Math.round(r.timeTaken/60)}m ${r.timeTaken%60}s${r.autoSubmit?' (auto)':''}</div></div>
+        <div><div class="dm-item-lbl">Email</div><div class="dm-item-val">${r.email}</div></div>
+        <div><div class="dm-item-lbl">Phone</div><div class="dm-item-val">${r.phone||'—'}</div></div>
+        <div><div class="dm-item-lbl">Violations</div><div class="dm-item-val" style="color:${r.tabSwitches>0?'var(--red)':'var(--green)'}">${r.tabSwitches>0?r.tabSwitches+' detected':'None'}</div></div>
+        <div><div class="dm-item-lbl">Status</div><div class="dm-item-val" style="color:${r.evaluated?'var(--green)':'var(--accent)'}">${r.evaluated?`Evaluated — ${pct}%`:'Pending evaluation'}</div></div>
+      </div>
+
+      <!-- Score summary bar -->
+      <div class="eval-summary-bar">
+        <div>
+          <div class="eval-sum-title">Evaluation Score</div>
+          <div class="eval-sum-score" id="live-score-display">${r.evaluated?totalScored:0} / ${maxScore}</div>
+          <div class="eval-sum-sub" id="live-pct-display">${r.evaluated?pct+'%':' '}</div>
+          <div class="score-bar-wrap" style="width:200px;margin-top:8px">
+            <div class="score-bar-bg"><div class="score-bar-fill" id="live-score-bar" style="width:${r.evaluated?pct:0}%"></div></div>
+          </div>
+        </div>
+        <div class="eval-overall-wrap">
+          <div class="eval-overall-label">Overall Comment for this test</div>
+          <textarea class="eval-overall-input" id="overall-comment" rows="3" placeholder="Write an overall remark for this test submission...">${r.overallComment||''}</textarea>
+        </div>
+        <button class="btn-save-eval" id="btn-save-eval">💾 Save Evaluation</button>
+      </div>
+
+      <!-- Per-question evaluation blocks -->
+      ${t.questions.map((q,i)=>{
+        const qScore=r.scores&&r.scores[q.id]!==undefined?r.scores[q.id]:'';
+        const qComment=r.comments&&r.comments[q.id]?r.comments[q.id]:'';
+        const hasAns=r.answers[q.id]&&r.answers[q.id].trim();
+        const starVal=qScore!==''?Math.round((+qScore/MAX_SCORE_PER_Q)*5):0;
+        return `<div class="qa-block">
+          <div class="qa-block-header">
+            <div class="qa-q-num">Question ${i+1} of ${t.questions.length}</div>
+            <div class="qa-score-badge ${qScore!==''?'scored':''}" id="badge-${q.id}">
+              ${qScore!==''?qScore+'/'+MAX_SCORE_PER_Q:'—/'+MAX_SCORE_PER_Q}
+            </div>
+          </div>
+          <div class="qa-question">${q.text}</div>
+          <div class="qa-ans-lbl">Candidate's Answer</div>
+          <div class="qa-answer">${hasAns?r.answers[q.id]:'<span class="qa-empty">Not answered</span>'}</div>
+          <div class="eval-row">
+            <div class="eval-score-wrap">
+              <div class="eval-score-label">Score (out of ${MAX_SCORE_PER_Q})</div>
+              <div class="score-input-wrap">
+                <input class="score-input" type="number" min="0" max="${MAX_SCORE_PER_Q}" placeholder="0" id="score-${q.id}" value="${qScore}" data-qid="${q.id}">
+                <span class="score-max">/ ${MAX_SCORE_PER_Q}</span>
+              </div>
+              <div class="score-stars" id="stars-${q.id}">
+                ${[1,2,3,4,5].map(n=>`<span class="star ${n<=starVal?'on':''}" data-n="${n}" data-qid="${q.id}">★</span>`).join('')}
+              </div>
+            </div>
+            <div class="eval-comment-wrap">
+              <div class="eval-comment-label">Evaluator Comment</div>
+              <textarea class="comment-input" id="comment-${q.id}" placeholder="Feedback, correction, or note for this question...">${qComment}</textarea>
+            </div>
+          </div>
+        </div>`;
+      }).join('')}
+
+      <button class="btn-save-eval" id="btn-save-eval-bottom" style="margin-top:4px;width:100%;padding:13px;font-size:15px">💾 Save Evaluation</button>
+    </div>`;
+
+  $('btn-back-list').onclick=()=>renderAdmin();
+
+  // ── Star click → fill score input ──
+  s.querySelectorAll('.star').forEach(star=>{
+    star.onclick=()=>{
+      const qid=star.dataset.qid, n=+star.dataset.n;
+      const scoreVal=Math.round((n/5)*MAX_SCORE_PER_Q);
+      $(`score-${qid}`).value=scoreVal;
+      updateStars(qid,n);
+      updateLiveScore(rid);
+    };
+  });
+
+  // ── Score input → update stars and live total ──
+  s.querySelectorAll('.score-input').forEach(inp=>{
+    inp.oninput=()=>{
+      const qid=inp.dataset.qid;
+      let v=+inp.value;
+      if(v>MAX_SCORE_PER_Q) inp.value=MAX_SCORE_PER_Q;
+      if(v<0) inp.value=0;
+      const starVal=Math.round((Math.min(+inp.value,MAX_SCORE_PER_Q)/MAX_SCORE_PER_Q)*5);
+      updateStars(qid,starVal);
+      updateLiveScore(rid);
+    };
+  });
+
+  function updateStars(qid,n){
+    $(`stars-${qid}`).querySelectorAll('.star').forEach(st=>{ st.classList.toggle('on',+st.dataset.n<=n); });
+  }
+
+  function updateLiveScore(rid){
+    const allR=getResponses(), rx=allR.find(x=>x.id===rid);
+    if(!rx) return;
+    const t2=TESTS.find(x=>x.id===rx.testId);
+    let total=0;
+    t2.questions.forEach(q=>{ const v=$(`score-${q.id}`); if(v&&v.value!=='') total+=Math.min(+v.value,MAX_SCORE_PER_Q); });
+    const mx=t2.questions.length*MAX_SCORE_PER_Q;
+    const p=Math.round((total/mx)*100);
+    $('live-score-display').textContent=`${total} / ${mx}`;
+    $('live-pct-display').textContent=`${p}%`;
+    $('live-score-bar').style.width=`${p}%`;
+    // update score badges
+    t2.questions.forEach(q=>{ const inp=$(`score-${q.id}`); const badge=$(`badge-${q.id}`); if(!inp||!badge) return; const v=inp.value; badge.textContent=v!==''?v+'/'+MAX_SCORE_PER_Q:'—/'+MAX_SCORE_PER_Q; badge.classList.toggle('scored',v!==''); });
+  }
+
+  function saveEval(){
+    const allR=getResponses(), idx=allR.findIndex(x=>x.id===rid);
+    if(idx<0) return;
+    const t2=TESTS.find(x=>x.id===allR[idx].testId);
+    if(!allR[idx].scores) allR[idx].scores={};
+    if(!allR[idx].comments) allR[idx].comments={};
+    t2.questions.forEach(q=>{
+      const sv=$(`score-${q.id}`); if(sv&&sv.value!=='') allR[idx].scores[q.id]=Math.min(+sv.value,MAX_SCORE_PER_Q);
+      const cv=$(`comment-${q.id}`); if(cv) allR[idx].comments[q.id]=cv.value;
+    });
+    allR[idx].overallComment=$('overall-comment').value||'';
+    allR[idx].evaluated=true;
+    saveResponses(allR);
+    // Push evaluation to Google Sheet for permanent record
+    sendEvalToSheets(allR[idx], t2);
+    $('btn-save-eval').textContent='✓ Saved!';
+    $('btn-save-eval-bottom').textContent='✓ Saved!';
+    setTimeout(()=>{ $('btn-save-eval').textContent='💾 Save Evaluation'; $('btn-save-eval-bottom').textContent='💾 Save Evaluation'; },2000);
+  }
+
+  $('btn-save-eval').onclick=saveEval;
+  $('btn-save-eval-bottom').onclick=saveEval;
+}
+
+// ═══════════════════════════════════════════════
+// CANDIDATE FULL REPORT
+// ═══════════════════════════════════════════════
+function renderCandidateReport(email){
+  const user=getUsers().find(u=>u.email===email);
+  const responses=getResponses().filter(r=>r.email===email&&r.evaluated);
+  if(!user||!responses.length){alert('No evaluated submissions found for this candidate.');return;}
+
+  // Compute totals per test
+  const testData=TESTS.map(t=>{
+    const rec=responses.find(r=>r.testId===t.id);
+    if(!rec) return {t,rec:null,scored:null,max:null,pct:null};
+    const max=t.questions.length*MAX_SCORE_PER_Q;
+    const scored=Object.values(rec.scores||{}).reduce((a,b)=>a+(+b||0),0);
+    const pct=Math.round((scored/max)*100);
+    return {t,rec,scored,max,pct};
+  });
+
+  const totalScored=testData.reduce((a,x)=>a+(x.scored||0),0);
+  const totalMax=testData.reduce((a,x)=>a+(x.max||0),0);
+  const overallPct=Math.round((totalScored/totalMax)*100);
+  const grade=getGrade(overallPct);
+
+  // Top 3 strongest and weakest questions across all tests
+  let allQScores=[];
+  testData.forEach(({t,rec})=>{
+    if(!rec) return;
+    t.questions.forEach((q,i)=>{
+      const sc=rec.scores&&rec.scores[q.id]!==undefined?+rec.scores[q.id]:null;
+      if(sc!==null) allQScores.push({label:`T${t.id}Q${i+1}`,text:q.text.substring(0,60)+'…',score:sc,pct:Math.round((sc/MAX_SCORE_PER_Q)*100)});
+    });
+  });
+  allQScores.sort((a,b)=>b.score-a.score);
+  const top3=allQScores.slice(0,3);
+  const bot3=allQScores.slice(-3).reverse();
+
+  const reportGenTime = new Date().toLocaleString('en-IN');
+  const s=$('screen-admin');
+
+  // Build the inner report HTML (shared between screen render and download)
+  const reportBodyHTML = buildReportHTML(user, testData, totalScored, totalMax, overallPct, grade, top3, bot3, reportGenTime);
+
+  s.innerHTML=`
+    <div class="detail-topbar">
+      <button class="btn-exit" id="btn-back-list" style="background:transparent;border-color:var(--border2);color:var(--text)">← All Candidates</button>
+      <div style="font-weight:600;font-size:15px;flex:1">Candidate Report — ${user.name}</div>
+      <div style="display:flex;gap:8px">
+        <button class="btn-print-report" id="btn-download-report">⬇ Download HTML</button>
+        <button class="btn-print-report" onclick="window.print()">🖨 Print / PDF</button>
+      </div>
+    </div>
+    <div class="report-wrap" id="report-content">
+      ${reportBodyHTML}
+    </div>`;
+
+  $('btn-back-list').onclick=()=>{renderAdmin(); $('tab-candidates').click();};
+  $('btn-download-report').onclick=()=>downloadReport(user, reportBodyHTML, reportGenTime);
+}
+
+// ─────────────────────────────────────────────
+// BUILD REPORT HTML — shared renderer used by
+// both the on-screen view and the download file
+// ─────────────────────────────────────────────
+function buildReportHTML(user, testData, totalScored, totalMax, overallPct, grade, top3, bot3, reportGenTime){
+  return `
+      <!-- HEADER -->
+      <div class="report-header">
+        <div>
+          <div class="report-candidate-name">${user.name}</div>
+          <div class="report-candidate-meta">${user.email} &nbsp;·&nbsp; ${user.phone||'—'} &nbsp;·&nbsp; Joined ${user.createdAt}</div>
+          <div style="margin-top:10px;font-size:12px;color:rgba(255,255,255,.5)">Report generated: ${reportGenTime}</div>
+        </div>
+        <div class="report-overall-score">
+          <div class="report-overall-num">${overallPct}%</div>
+          <div class="report-overall-lbl">Overall Score</div>
+          <div style="font-size:13px;color:rgba(255,255,255,.5);margin-top:2px">${totalScored} / ${totalMax} marks</div>
+          <div class="report-grade-badge ${grade.cls}">${grade.label}</div>
+        </div>
+      </div>
+
+      <!-- PER-TEST CARDS -->
+      <div class="report-tests-grid">
+        ${testData.map(({t,rec,scored,max,pct})=>{
+          if(!rec) return `<div class="report-test-card"><div class="rtc-header"><div><div class="tc-num ${t.color}" style="width:32px;height:32px;font-size:12px;display:inline-flex;margin-bottom:6px">T${t.id}</div><div class="rtc-title">${t.title}</div></div></div><div class="rtc-not-evaluated">Not submitted / Not evaluated</div></div>`;
+          const g=getGrade(pct);
+          return `<div class="report-test-card">
+            <div class="rtc-header">
+              <div><div class="tc-num ${t.color}" style="width:32px;height:32px;font-size:12px;display:inline-flex;margin-bottom:6px">T${t.id}</div><div class="rtc-title">${t.title}</div></div>
+              <div style="text-align:right"><div class="rtc-score">${pct}%</div><div class="rtc-score-lbl">${scored}/${max}</div><div class="report-grade-badge ${g.cls}" style="font-size:10px;padding:2px 10px;margin-top:4px">${g.label}</div></div>
+            </div>
+            <div class="rtc-bar-bg"><div class="rtc-bar-fill" style="width:${pct}%"></div></div>
+            ${rec.overallComment?`<div class="rtc-comment">"${rec.overallComment}"</div>`:''}
+          </div>`;
+        }).join('')}
+      </div>
+
+      <!-- STRENGTHS / WEAKNESSES -->
+      <div class="report-strengths-wrap">
+        <div class="report-str-card">
+          <div class="rsc-title strength">💪 Top Performing Questions</div>
+          ${top3.map(q=>`<div class="rsc-q-row"><span style="flex:1">${q.label}: ${q.text}</span><span class="rsc-q-score score-hi">${q.score}/${MAX_SCORE_PER_Q}</span></div>`).join('')}
+        </div>
+        <div class="report-str-card">
+          <div class="rsc-title weakness">📌 Areas to Improve</div>
+          ${bot3.map(q=>`<div class="rsc-q-row"><span style="flex:1">${q.label}: ${q.text}</span><span class="rsc-q-score score-lo">${q.score}/${MAX_SCORE_PER_Q}</span></div>`).join('')}
+        </div>
+      </div>
+
+      <!-- DETAILED QUESTION-LEVEL SCORES -->
+      <div class="report-questions-section">
+        <div class="section-title" style="margin-bottom:12px">Question-wise Scores</div>
+        ${testData.map(({t,rec,scored,max,pct})=>{
+          if(!rec) return '';
+          return `<div class="rqs-test-block">
+            <div class="rqs-test-header">
+              <div class="rqs-test-title">Test ${t.id}: ${t.title}</div>
+              <div class="rqs-test-score">${scored}/${max} — ${pct}%</div>
+            </div>
+            ${t.questions.map((q,i)=>{
+              const sc=rec.scores&&rec.scores[q.id]!==undefined?+rec.scores[q.id]:null;
+              const cm=rec.comments&&rec.comments[q.id]?rec.comments[q.id]:'';
+              const pctQ=sc!==null?Math.round((sc/MAX_SCORE_PER_Q)*100):null;
+              return `<div class="rqs-q-row">
+                <div><div class="rqs-q-text">Q${i+1}: ${q.text}</div>${cm?`<div class="rqs-q-comment">💬 ${cm}</div>`:''}</div>
+                <div style="font-size:11px;color:#999;text-align:center">${pctQ!==null?pctQ+'%':'—'}</div>
+                <div class="rqs-q-score ${sc!==null?(sc>=7?'score-hi':sc>=4?'':'score-lo'):''}">
+                  ${sc!==null?`${sc}<span style="font-size:10px;font-weight:400;color:#999">/${MAX_SCORE_PER_Q}</span>`:'<span style="font-size:11px;color:#999">N/A</span>'}
+                </div>
+              </div>`;
+            }).join('')}
+          </div>`;
+        }).join('')}
+      </div>`;
+}
+
+// ─────────────────────────────────────────────
+// DOWNLOAD REPORT — generates a fully self-
+// contained HTML file with all CSS inlined.
+// Opens in browser as a new tab and auto-triggers
+// download as  CandidateName_BDM_Report.html
+// The file can be opened offline, printed to PDF,
+// or shared via email — no internet needed.
+// ─────────────────────────────────────────────
+function downloadReport(user, reportBodyHTML, reportGenTime){
+  const safeName = user.name.replace(/\s+/g,'_');
+  const fileName = `${safeName}_BDM_Report.html`;
+
+  const fullHTML = `<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>BDM Report — ${user.name}</title>
+<link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display:ital@0;1&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:'DM Sans',sans-serif;background:#F7F5F0;color:#1A1A1A;font-size:14px;line-height:1.6;padding:0}
+.report-wrap{padding:2rem;max-width:900px;margin:0 auto}
+
+/* top action bar — hidden on print */
+.download-bar{background:#1A3A2A;padding:.75rem 2rem;display:flex;align-items:center;justify-content:space-between;gap:1rem}
+.download-bar-title{font-family:'DM Serif Display',serif;font-size:18px;color:#F5C842}
+.download-bar-sub{font-size:12px;color:rgba(255,255,255,.5);margin-top:2px}
+.btn-pdf{background:#E8A020;color:#1A3A2A;border:none;border-radius:8px;padding:8px 20px;font-size:13px;font-weight:600;cursor:pointer;font-family:'DM Sans',sans-serif}
+.btn-pdf:hover{background:#F5C842}
+
+/* report styles */
+.report-header{background:#1A3A2A;border-radius:12px;padding:2rem;margin-bottom:1.5rem;display:flex;align-items:center;justify-content:space-between;gap:1rem;flex-wrap:wrap}
+.report-candidate-name{font-family:'DM Serif Display',serif;font-size:28px;color:#fff}
+.report-candidate-meta{font-size:13px;color:rgba(255,255,255,.6);margin-top:4px}
+.report-overall-score{text-align:right}
+.report-overall-num{font-family:'DM Serif Display',serif;font-size:48px;color:#F5C842;line-height:1}
+.report-overall-lbl{font-size:12px;color:rgba(255,255,255,.5);text-transform:uppercase;letter-spacing:.06em;margin-top:4px}
+.report-grade-badge{display:inline-block;padding:4px 16px;border-radius:50px;font-size:13px;font-weight:700;letter-spacing:.04em;margin-top:8px}
+.grade-a{background:rgba(26,107,58,.3);color:#7FE89A}
+.grade-b{background:rgba(45,106,79,.3);color:#5FC4A0}
+.grade-c{background:rgba(232,160,32,.3);color:#F5C842}
+.grade-d{background:rgba(192,57,43,.3);color:#F1948A}
+.report-tests-grid{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-bottom:1.5rem}
+.report-test-card{background:#fff;border:1px solid rgba(26,58,42,.12);border-radius:12px;padding:1.25rem}
+.rtc-header{display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:12px}
+.rtc-title{font-size:13px;font-weight:600;color:#1A1A1A}
+.rtc-score{font-family:'DM Serif Display',serif;font-size:26px;color:#2D6A4F}
+.rtc-score-lbl{font-size:11px;color:#999}
+.rtc-bar-bg{height:8px;background:#F0EDE6;border-radius:4px;overflow:hidden;margin-bottom:10px}
+.rtc-bar-fill{height:100%;border-radius:4px;background:linear-gradient(90deg,#2D6A4F,#E8A020)}
+.rtc-comment{font-size:12px;color:#555;line-height:1.6;font-style:italic;border-left:3px solid rgba(26,58,42,.2);padding-left:10px;margin-top:8px}
+.rtc-not-evaluated{font-size:12px;color:#999;font-style:italic}
+.tc-num{width:32px;height:32px;border-radius:50%;display:inline-flex;align-items:center;justify-content:center;font-weight:600;font-size:12px;margin-bottom:6px}
+.t1{background:#E8F4FD;color:#1A5A8A}.t2{background:#FFF3E0;color:#8A4A1A}
+.t3{background:#E8F5E9;color:#1A5A2A}.t4{background:#FCE4EC;color:#8A1A3A}
+.report-strengths-wrap{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-bottom:1.5rem}
+.report-str-card{background:#fff;border:1px solid rgba(26,58,42,.12);border-radius:12px;padding:1.25rem}
+.rsc-title{font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:.06em;margin-bottom:10px}
+.rsc-title.strength{color:#1A6B3A}.rsc-title.weakness{color:#C0392B}
+.rsc-q-row{font-size:12px;color:#555;padding:5px 0;border-bottom:1px solid rgba(26,58,42,.08);display:flex;justify-content:space-between;gap:8px;align-items:center}
+.rsc-q-row:last-child{border-bottom:none}
+.rsc-q-score{font-weight:600;font-size:13px;flex-shrink:0}
+.score-hi{color:#1A6B3A}.score-lo{color:#C0392B}
+.report-questions-section{margin-top:1.5rem}
+.section-title{font-size:13px;font-weight:600;color:#999;text-transform:uppercase;letter-spacing:.08em;margin-bottom:12px}
+.rqs-test-block{background:#fff;border:1px solid rgba(26,58,42,.12);border-radius:12px;margin-bottom:14px;overflow:hidden}
+.rqs-test-header{background:#1A3A2A;padding:.8rem 1.25rem;display:flex;justify-content:space-between;align-items:center}
+.rqs-test-title{font-size:13px;font-weight:600;color:#fff}
+.rqs-test-score{font-size:13px;color:#F5C842;font-weight:600}
+.rqs-q-row{padding:.8rem 1.25rem;border-bottom:1px solid rgba(26,58,42,.08);display:grid;grid-template-columns:1fr 60px 60px;gap:10px;align-items:start}
+.rqs-q-row:last-child{border-bottom:none}
+.rqs-q-text{font-size:12px;color:#555;line-height:1.5}
+.rqs-q-comment{font-size:11px;color:#999;font-style:italic;margin-top:3px}
+.rqs-q-score{font-size:14px;font-weight:700;text-align:center}
+
+/* score summary table */
+.score-summary-table{width:100%;border-collapse:collapse;background:#fff;border-radius:12px;overflow:hidden;margin-bottom:1.5rem;border:1px solid rgba(26,58,42,.12)}
+.score-summary-table th{background:#1A3A2A;color:#fff;padding:10px 16px;font-size:12px;text-align:left;font-weight:600;letter-spacing:.04em}
+.score-summary-table td{padding:10px 16px;font-size:13px;border-bottom:1px solid rgba(26,58,42,.08)}
+.score-summary-table tr:last-child td{border-bottom:none;font-weight:600;background:#F7F5F0}
+.score-summary-table tr:last-child td:first-child{color:#1A3A2A}
+
+@media print{
+  .download-bar{display:none!important}
+  body{background:#fff;padding:0}
+  .report-wrap{padding:1rem}
+  .report-tests-grid,.report-strengths-wrap{grid-template-columns:1fr 1fr}
+  .rqs-test-block{page-break-inside:avoid}
+}
+@media(max-width:600px){
+  .report-tests-grid,.report-strengths-wrap{grid-template-columns:1fr}
+  .rqs-q-row{grid-template-columns:1fr 50px 50px}
+}
+</style>
+</head>
+<body>
+
+<!-- Action bar -->
+<div class="download-bar">
+  <div>
+    <div class="download-bar-title">Educart BDM — Candidate Report</div>
+    <div class="download-bar-sub">Open this file in any browser · Print to save as PDF</div>
+  </div>
+  <button class="btn-pdf" onclick="window.print()">🖨 Print / Save as PDF</button>
+</div>
+
+<div class="report-wrap">
+
+  <!-- Score summary table at top for quick reference -->
+  <table class="score-summary-table" style="margin-top:1.5rem">
+    <thead>
+      <tr>
+        <th>Test</th>
+        <th>Score</th>
+        <th>Marks</th>
+        <th>Grade</th>
+      </tr>
+    </thead>
+    <tbody>
+      ${testData.map(({t,rec,scored,max,pct})=>{
+        if(!rec) return `<tr><td>Test ${t.id}: ${t.title}</td><td>—</td><td>—</td><td style="color:#999">Not evaluated</td></tr>`;
+        const g=getGrade(pct);
+        return `<tr><td>Test ${t.id}: ${t.title}</td><td>${pct}%</td><td>${scored}/${max}</td><td>${g.label}</td></tr>`;
+      }).join('')}
+      <tr>
+        <td>Overall Total</td>
+        <td>${overallPct}%</td>
+        <td>${totalScored}/${totalMax}</td>
+        <td>${grade.label}</td>
+      </tr>
+    </tbody>
+  </table>
+
+  ${reportBodyHTML}
+
+</div>
+</body>
+</html>`;
+
+  // Trigger download
+  const blob = new Blob([fullHTML], { type: 'text/html;charset=utf-8' });
+  const url  = URL.createObjectURL(blob);
+  const a    = document.createElement('a');
+  a.href     = url;
+  a.download = fileName;
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+  URL.revokeObjectURL(url);
+}
+
+// ═══════════════════════════════════════════════
+// INIT
+// ═══════════════════════════════════════════════
+(function init(){
+  const sess=getSession();
+  if(sess){
+    const user=getUsers().find(u=>u.email===sess.email&&u.pass===sess.pass);
+    if(user){S.user=user;renderDashboard();showScreen('screen-dashboard');return;}
+    else clearSession();
+  }
+  showScreen('screen-login');
+})();
+</script>
+</body>
+</html>
