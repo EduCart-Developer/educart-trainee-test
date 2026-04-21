@@ -158,6 +158,8 @@ body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--text);min
 .tag-evaluated{background:#E8F4FD;color:#1A5A8A}
 .btn-review{background:var(--brand);color:#fff;border:none;border-radius:var(--radius-sm);padding:7px 16px;font-size:12px;font-family:'DM Sans',sans-serif;font-weight:500;cursor:pointer;white-space:nowrap;transition:background .2s}
 .btn-review:hover{background:var(--brand2)}
+.btn-reset{background:transparent;color:var(--red);border:1px solid rgba(192,57,43,.35);border-radius:var(--radius-sm);padding:5px 12px;font-size:11px;font-family:'DM Sans',sans-serif;font-weight:600;cursor:pointer;white-space:nowrap;transition:all .2s;text-transform:uppercase;letter-spacing:.04em}
+.btn-reset:hover{background:rgba(192,57,43,.08);border-color:var(--red)}
 .empty-state{text-align:center;padding:4rem 2rem;color:var(--text3)}
 .candidate-row{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:14px 18px;margin-bottom:8px;display:flex;align-items:center;justify-content:space-between;gap:12px}
 .progress-pips{display:flex;gap:4px}
@@ -165,6 +167,7 @@ body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--text);min
 .pip.done{background:var(--brand2)}
 .pip.evaluated{background:var(--accent)}
 .pip.pip-reattempt{outline:2px solid var(--accent);outline-offset:2px}
+.pip.pip-reset{background:var(--red);outline:2px solid rgba(192,57,43,.4);outline-offset:2px}
 
 /* ── DETAIL / EVALUATION VIEW ── */
 .detail-topbar{background:var(--surface);border-bottom:1px solid var(--border);padding:1rem 2rem;display:flex;align-items:center;gap:1rem;position:sticky;top:0;z-index:10}
@@ -273,6 +276,8 @@ body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--text);min
 .btn-modal-cancel:hover{background:var(--surface2)}
 .btn-modal-confirm{flex:1;padding:11px;border:none;border-radius:var(--radius-sm);font-family:'DM Sans',sans-serif;font-size:14px;font-weight:500;cursor:pointer;background:var(--brand);color:#fff;transition:background .2s}
 .btn-modal-confirm:hover{background:var(--brand2)}
+.btn-modal-danger{flex:1;padding:11px;border:none;border-radius:var(--radius-sm);font-family:'DM Sans',sans-serif;font-size:14px;font-weight:500;cursor:pointer;background:var(--red);color:#fff;transition:background .2s}
+.btn-modal-danger:hover{background:#A93226}
 
 /* ── LOADING ── */
 .loading-overlay{position:fixed;inset:0;background:rgba(247,245,240,.92);display:none;align-items:center;justify-content:center;z-index:9999;flex-direction:column;gap:12px;font-size:15px;color:var(--text2)}
@@ -285,6 +290,11 @@ body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--text);min
 .admin-login-card{background:var(--surface);border:1px solid var(--border);border-radius:20px;padding:2.5rem;max-width:380px;width:100%;text-align:center}
 .login-logo{font-family:'DM Serif Display',serif;font-size:24px;color:var(--brand);margin-bottom:4px}
 .login-sub{font-size:13px;color:var(--text3);margin-bottom:2rem}
+
+/* ── CANDIDATE ACTION STRIP ── */
+.candidate-actions-strip{display:flex;gap:6px;flex-wrap:wrap;padding-top:8px;border-top:1px solid var(--border);margin-top:4px}
+.strip-label{font-size:11px;color:var(--text3);align-self:center;text-transform:uppercase;letter-spacing:.05em;font-weight:600;flex-shrink:0}
+.action-tag-btn{font-size:11px;font-weight:600;padding:4px 12px;border-radius:50px;text-transform:uppercase;letter-spacing:.04em;cursor:pointer;border:none;font-family:inherit;transition:all .2s}
 
 @media print {
   .detail-topbar,.admin-header,.btn-save-eval,.btn-print-report,.btn-exit{display:none!important}
@@ -332,6 +342,19 @@ body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--text);min
     <div class="modal-btns">
       <button class="btn-modal-cancel" id="modal-cancel">Go back</button>
       <button class="btn-modal-confirm" id="modal-confirm">Yes, submit</button>
+    </div>
+  </div>
+</div>
+
+<!-- RESET CONFIRMATION MODAL -->
+<div class="modal-overlay" id="reset-modal">
+  <div class="modal-box" style="border:2px solid rgba(192,57,43,.3)">
+    <div style="font-size:32px;margin-bottom:8px">🗑️</div>
+    <div class="modal-title" style="color:var(--red)" id="reset-modal-title">Reset Test?</div>
+    <div class="modal-sub" id="reset-modal-sub">This will permanently delete the submission and all scores. The candidate will need to retake the test from scratch.</div>
+    <div class="modal-btns">
+      <button class="btn-modal-cancel" id="reset-modal-cancel">Cancel</button>
+      <button class="btn-modal-danger" id="reset-modal-confirm">Yes, Reset Test</button>
     </div>
   </div>
 </div>
@@ -477,7 +500,7 @@ body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--text);min
 // ═══════════════════════════════════════════════
 const GOOGLE_SCRIPT_URL = 'https://educar-trainee-test.educart-developer.workers.dev';
 const ADMIN_PASSWORD    = 'Educart@2026';
-const MAX_SCORE_PER_Q   = 10; // each question scored out of 10
+const MAX_SCORE_PER_Q   = 10;
 
 // ═══════════════════════════════════════════════
 // TEST DATA
@@ -541,9 +564,7 @@ let S = {
 };
 
 // ═══════════════════════════════════════════════
-// STORAGE — localStorage is the local cache.
-// On load, data is synced FROM the Google Sheet
-// so the app works correctly on any device.
+// STORAGE
 // ═══════════════════════════════════════════════
 const getUsers      = () => JSON.parse(localStorage.getItem('bdm_users')    ||'[]');
 const saveUsers     = d  => localStorage.setItem('bdm_users',    JSON.stringify(d));
@@ -555,13 +576,8 @@ const clearSession  = () => localStorage.removeItem('bdm_session');
 
 // ═══════════════════════════════════════════════
 // SHEET SYNC ENGINE
-// Pulls all data from the Google Sheet and merges
-// into localStorage. Sheet is source of truth.
-// Runs on every page load before anything is shown.
 // ═══════════════════════════════════════════════
 let syncDone = false;
-
-// Reattempt grants: { "email:testId": true }
 let reattemptGrants = {};
 
 function getReattemptGrants() {
@@ -580,14 +596,12 @@ async function syncFromSheet() {
     if (data.status !== 'ok') throw new Error(data.message || 'Sync failed');
 
     // ── 1. Merge users ──
-    // Passwords are never in the sheet. Keep local pass values.
     const localUsers  = getUsers();
     const sheetUsers  = data.users || [];
     const mergedUsers = [...localUsers];
     sheetUsers.forEach(su => {
       const existing = mergedUsers.find(u => u.email === su.email);
       if (!existing) mergedUsers.push({ ...su, pass: '' });
-      // if exists locally, keep local record (has password)
     });
     saveUsers(mergedUsers);
 
@@ -598,8 +612,8 @@ async function syncFromSheet() {
     });
 
     // ── 3. Merge submissions ──
-    // Sheet is authoritative source of all submissions.
-    // Local records are kept only if not yet in sheet.
+    // Sheet is the authoritative source. We merge sheet records first,
+    // then keep any local-only records (not yet synced to sheet).
     const sheetSubs = data.submissions || [];
     const localSubs = getResponses();
     const localById = {};
@@ -611,10 +625,9 @@ async function syncFromSheet() {
     sheetSubs.forEach(sheetRec => {
       const id    = String(sheetRec.id);
       const local = localById[id];
-      // Prefer local record (may have richer data); fall back to sheet record
       const rec   = local ? { ...local } : { ...sheetRec };
 
-      // Always apply latest evaluation from sheet (overrides local eval)
+      // Always apply latest evaluation from sheet
       const ev = evalMap[id];
       if (ev) {
         rec.scores         = ev.scores         || {};
@@ -632,7 +645,7 @@ async function syncFromSheet() {
       seenIds.add(id);
     });
 
-    // Keep local-only records (just submitted, not yet synced to sheet)
+    // Keep local-only records (just submitted, not yet synced)
     localSubs.forEach(r => {
       if (!seenIds.has(String(r.id))) merged.push(r);
     });
@@ -667,11 +680,10 @@ const showErr    = (id,msg) => { const e=$(id); e.textContent=msg; e.style.displ
 const hideErr    = id  => { const e=$(id); e.style.display='none'; };
 const initials   = name=> name.trim().split(' ').map(w=>w[0]).join('').toUpperCase().slice(0,2);
 const loading    = (show,msg='Please wait...')=>{ $('loading-overlay').classList.toggle('open',show); $('loading-msg').textContent=msg; };
-// hasCompleted returns true if candidate has a submission AND no active reattempt grant
+
 function hasCompleted(email, testId) {
   const hasSubmission = getResponses().some(r => r.email === email && r.testId === testId);
   if (!hasSubmission) return false;
-  // If admin granted a reattempt, treat as not completed (allow retake)
   const key = email + ':' + testId;
   const grants = reattemptGrants || getReattemptGrants();
   if (grants[key]) return false;
@@ -709,7 +721,6 @@ function onVisibility(){
   if(document.hidden){ S.tabSwitches++; const wb=$('warn-banner'); if(wb){wb.style.display='block';wb.textContent=`⚠ Tab switch detected (${S.tabSwitches}x) — recorded.`;} }
 }
 
-// ── Block copy / paste / right-click everywhere ──
 document.addEventListener('contextmenu', e=>e.preventDefault());
 document.addEventListener('copy',  e=>e.preventDefault());
 document.addEventListener('cut',   e=>e.preventDefault());
@@ -854,12 +865,11 @@ async function doSubmit(auto){
     submittedAt:new Date().toLocaleString('en-IN'), notes:{},
     scores:{}, comments:{}, overallComment:'', evaluated:false
   };
-  // Revoke reattempt grant if this was a reattempt (so it locks again)
+  // Revoke reattempt grant if this was a reattempt
   const grantKey = rec.email + ':' + rec.testId;
   if (reattemptGrants[grantKey]) {
     delete reattemptGrants[grantKey];
     saveReattemptGrants(reattemptGrants);
-    // Tell the sheet to revoke it too
     if (GOOGLE_SCRIPT_URL !== 'YOUR_GOOGLE_APPS_SCRIPT_URL_HERE') {
       fetch(GOOGLE_SCRIPT_URL, { method:'POST', body: JSON.stringify({ type:'revoke_reattempt', email: rec.email, testId: rec.testId }) }).catch(()=>{});
     }
@@ -889,12 +899,6 @@ async function sendSignupToSheets(user){
   try { await fetch(GOOGLE_SCRIPT_URL,{method:'POST',body:JSON.stringify({type:'signup',name:user.name,email:user.email,phone:user.phone||'',createdAt:user.createdAt})}); } catch(e){}
 }
 
-// ─────────────────────────────────────────────
-// GOOGLE SHEETS — Push evaluation scores
-// Called every time admin saves an evaluation.
-// Uses submissionId as a unique key so the Apps
-// Script can upsert (update if exists, else add).
-// ─────────────────────────────────────────────
 async function sendEvalToSheets(rec, testDef){
   if(GOOGLE_SCRIPT_URL==='YOUR_GOOGLE_APPS_SCRIPT_URL_HERE') return;
   try {
@@ -941,9 +945,17 @@ function showAdminLogin(){
     <div style="margin-top:12px"><a id="admin-back" style="font-size:13px;color:var(--text3);text-decoration:none;cursor:pointer">← Back</a></div>
   </div></div>`;
   showScreen('screen-admin');
-  $('btn-admin-login').onclick=()=>{
-    if($('admin-pass').value===ADMIN_PASSWORD){S.adminAuthed=true;renderAdmin();}
-    else showErr('admin-err','Incorrect password.');
+  $('btn-admin-login').onclick=async()=>{
+    if($('admin-pass').value===ADMIN_PASSWORD){
+      S.adminAuthed=true;
+      // ── AUTO-SYNC from sheet before rendering admin panel ──
+      // This ensures old evaluations from Google Sheets are pulled in
+      // so pre-update submissions show their evaluation data correctly.
+      await syncFromSheet();
+      renderAdmin();
+    } else {
+      showErr('admin-err','Incorrect password.');
+    }
   };
   $('admin-pass').onkeydown=e=>{ if(e.key==='Enter') $('btn-admin-login').click(); };
   $('admin-back').onclick=e=>{ e.preventDefault(); if(S.user){renderDashboard();showScreen('screen-dashboard');}else showScreen('screen-login'); };
@@ -1015,13 +1027,15 @@ function renderSubmissionsTab(){
   c.querySelectorAll('.btn-review').forEach(b=>{ b.onclick=()=>renderEvalDetail(+b.dataset.rid); });
 }
 
+// ═══════════════════════════════════════════════
+// CANDIDATES TAB — with Reattempt + Reset buttons
+// ═══════════════════════════════════════════════
 function renderCandidatesTab(){
   const users=getUsers(), c=$('admin-tab-content');
   if(!users.length){c.innerHTML=`<div class="empty-state"><div style="font-size:40px">👤</div><p>No candidates registered yet.</p></div>`;return;}
   const grants = reattemptGrants || getReattemptGrants();
   c.innerHTML=users.map(u=>{
     const allRecs = getResponses().filter(r=>r.email===u.email);
-    // For display purposes use raw submission count (ignore reattempt grants)
     const submittedTests = TESTS.filter(t=>allRecs.some(r=>r.testId===t.id));
     const evaluatedRecs  = allRecs.filter(r=>r.evaluated);
     const allEvaluated   = submittedTests.length===4 && evaluatedRecs.length>=4;
@@ -1042,34 +1056,51 @@ function renderCandidatesTab(){
           ${allEvaluated?`<button class="btn-review" data-email="${u.email}">📊 Report</button>`:''}
         </div>
       </div>
-      <div style="display:flex;gap:6px;flex-wrap:wrap;padding-top:4px;border-top:1px solid var(--border)">
-        <span style="font-size:11px;color:var(--text3);align-self:center;text-transform:uppercase;letter-spacing:.05em;font-weight:600">Reattempt:</span>
+
+      <!-- REATTEMPT ROW -->
+      <div class="candidate-actions-strip">
+        <span class="strip-label">Reattempt:</span>
         ${TESTS.map(t=>{
           const hasSubmission=allRecs.some(r=>r.testId===t.id);
           const hasGrant=grants[u.email+':'+t.id];
           if(!hasSubmission) return `<span class="tag" style="background:var(--surface2);color:var(--text3)">T${t.id} — Not attempted</span>`;
-          if(hasGrant) return `<button class="btn-revoke-reattempt tag tag-flag" data-email="${u.email}" data-tid="${t.id}" style="cursor:pointer;border:none;font-family:inherit">T${t.id} ✓ Granted — Revoke</button>`;
-          return `<button class="btn-grant-reattempt tag tag-clean" data-email="${u.email}" data-tid="${t.id}" style="cursor:pointer;border:none;font-family:inherit">T${t.id} — Allow Reattempt</button>`;
+          if(hasGrant) return `<button class="btn-revoke-reattempt action-tag-btn tag-flag" data-email="${u.email}" data-tid="${t.id}">T${t.id} ✓ Granted — Revoke</button>`;
+          return `<button class="btn-grant-reattempt action-tag-btn tag-clean" data-email="${u.email}" data-tid="${t.id}">T${t.id} — Allow Reattempt</button>`;
         }).join('')}
+      </div>
+
+      <!-- RESET ROW -->
+      <div class="candidate-actions-strip" style="border-top:1px dashed rgba(192,57,43,.2);padding-top:8px">
+        <span class="strip-label" style="color:rgba(192,57,43,.7)">Reset Test:</span>
+        ${TESTS.map(t=>{
+          const hasSubmission=allRecs.some(r=>r.testId===t.id);
+          if(!hasSubmission) return `<span class="tag" style="background:var(--surface2);color:var(--text3)">T${t.id} — —</span>`;
+          return `<button class="btn-reset-test btn-reset" data-email="${u.email}" data-tid="${t.id}" data-name="${u.name}">🗑 T${t.id}</button>`;
+        }).join('')}
+        <span style="font-size:11px;color:rgba(192,57,43,.5);align-self:center;font-style:italic">Deletes submission completely</span>
       </div>
     </div>`;
   }).join('');
+
+  // ── Report button ──
   c.querySelectorAll('.btn-review[data-email]').forEach(b=>{ b.onclick=()=>renderCandidateReport(b.dataset.email); });
+
+  // ── Grant reattempt ──
   c.querySelectorAll('.btn-grant-reattempt').forEach(b=>{
     b.onclick=async()=>{
       const email=b.dataset.email, tid=+b.dataset.tid;
       b.textContent='Granting…'; b.disabled=true;
-      // Update local state
       const g=reattemptGrants||getReattemptGrants();
       g[email+':'+tid]=true;
       saveReattemptGrants(g); reattemptGrants=g;
-      // Push to sheet
       if(GOOGLE_SCRIPT_URL!=='YOUR_GOOGLE_APPS_SCRIPT_URL_HERE'){
         try{ await fetch(GOOGLE_SCRIPT_URL,{method:'POST',body:JSON.stringify({type:'reattempt',email,testId:tid})}); }catch(e){}
       }
       renderCandidatesTab();
     };
   });
+
+  // ── Revoke reattempt ──
   c.querySelectorAll('.btn-revoke-reattempt').forEach(b=>{
     b.onclick=async()=>{
       const email=b.dataset.email, tid=+b.dataset.tid;
@@ -1083,6 +1114,70 @@ function renderCandidatesTab(){
       renderCandidatesTab();
     };
   });
+
+  // ── Reset test ──
+  c.querySelectorAll('.btn-reset-test').forEach(b=>{
+    b.onclick=()=>{
+      const email=b.dataset.email, tid=+b.dataset.tid, name=b.dataset.name;
+      const testTitle=TESTS.find(t=>t.id===tid)?.title||`Test ${tid}`;
+      $('reset-modal-title').textContent=`Reset Test ${tid}?`;
+      $('reset-modal-sub').innerHTML=`This will permanently delete <strong>${name}</strong>'s submission for <strong>${testTitle}</strong> including all scores and evaluations.<br><br>The candidate will need to take the test again from scratch.`;
+      $('reset-modal').classList.add('open');
+      $('reset-modal-confirm').onclick=async()=>{
+        $('reset-modal').classList.remove('open');
+        await doResetTest(email, tid);
+      };
+    };
+  });
+}
+
+$('reset-modal-cancel').onclick=()=>$('reset-modal').classList.remove('open');
+
+// ═══════════════════════════════════════════════
+// RESET TEST — deletes submission from localStorage
+// and revokes any reattempt grant for that test.
+// Also signals the sheet backend to remove the row.
+// ═══════════════════════════════════════════════
+async function doResetTest(email, testId){
+  loading(true, 'Resetting test…');
+
+  // 1. Remove all submission records for this email + testId from localStorage
+  const all = getResponses();
+  const removed = all.filter(r => r.email === email && r.testId === testId);
+  const kept    = all.filter(r => !(r.email === email && r.testId === testId));
+  saveResponses(kept);
+
+  // 2. Also revoke any reattempt grant for this test (clean slate)
+  const g = reattemptGrants || getReattemptGrants();
+  if (g[email + ':' + testId]) {
+    delete g[email + ':' + testId];
+    saveReattemptGrants(g);
+    reattemptGrants = g;
+  }
+
+  // 3. Signal sheet backend to delete/mark the row(s)
+  if (GOOGLE_SCRIPT_URL !== 'YOUR_GOOGLE_APPS_SCRIPT_URL_HERE') {
+    const ids = removed.map(r => String(r.id));
+    try {
+      await fetch(GOOGLE_SCRIPT_URL, {
+        method: 'POST',
+        body: JSON.stringify({
+          type:     'reset_test',
+          email:    email,
+          testId:   testId,
+          submissionIds: ids,
+        })
+      });
+    } catch(e){ console.warn('Sheet reset signal failed:', e.message); }
+  }
+
+  loading(false);
+  renderAdmin();
+  // Stay on candidates tab
+  setTimeout(()=>{
+    const ct = $('tab-candidates');
+    if(ct){ ct.classList.add('active'); $('tab-submissions')&&$('tab-submissions').classList.remove('active'); renderCandidatesTab(); }
+  }, 50);
 }
 
 // ═══════════════════════════════════════════════
@@ -1114,7 +1209,6 @@ function renderEvalDetail(rid){
         <div><div class="dm-item-lbl">Status</div><div class="dm-item-val" style="color:${r.evaluated?'var(--green)':'var(--accent)'}">${r.evaluated?`Evaluated — ${pct}%`:'Pending evaluation'}</div></div>
       </div>
 
-      <!-- Score summary bar -->
       <div class="eval-summary-bar">
         <div>
           <div class="eval-sum-title">Evaluation Score</div>
@@ -1131,7 +1225,6 @@ function renderEvalDetail(rid){
         <button class="btn-save-eval" id="btn-save-eval">💾 Save Evaluation</button>
       </div>
 
-      <!-- Per-question evaluation blocks -->
       ${t.questions.map((q,i)=>{
         const qScore=r.scores&&r.scores[q.id]!==undefined?r.scores[q.id]:'';
         const qComment=r.comments&&r.comments[q.id]?r.comments[q.id]:'';
@@ -1171,7 +1264,6 @@ function renderEvalDetail(rid){
 
   $('btn-back-list').onclick=()=>renderAdmin();
 
-  // ── Star click → fill score input ──
   s.querySelectorAll('.star').forEach(star=>{
     star.onclick=()=>{
       const qid=star.dataset.qid, n=+star.dataset.n;
@@ -1182,7 +1274,6 @@ function renderEvalDetail(rid){
     };
   });
 
-  // ── Score input → update stars and live total ──
   s.querySelectorAll('.score-input').forEach(inp=>{
     inp.oninput=()=>{
       const qid=inp.dataset.qid;
@@ -1210,7 +1301,6 @@ function renderEvalDetail(rid){
     $('live-score-display').textContent=`${total} / ${mx}`;
     $('live-pct-display').textContent=`${p}%`;
     $('live-score-bar').style.width=`${p}%`;
-    // update score badges
     t2.questions.forEach(q=>{ const inp=$(`score-${q.id}`); const badge=$(`badge-${q.id}`); if(!inp||!badge) return; const v=inp.value; badge.textContent=v!==''?v+'/'+MAX_SCORE_PER_Q:'—/'+MAX_SCORE_PER_Q; badge.classList.toggle('scored',v!==''); });
   }
 
@@ -1227,7 +1317,6 @@ function renderEvalDetail(rid){
     allR[idx].overallComment=$('overall-comment').value||'';
     allR[idx].evaluated=true;
     saveResponses(allR);
-    // Push evaluation to Google Sheet for permanent record
     sendEvalToSheets(allR[idx], t2);
     $('btn-save-eval').textContent='✓ Saved!';
     $('btn-save-eval-bottom').textContent='✓ Saved!';
@@ -1246,7 +1335,6 @@ function renderCandidateReport(email){
   const responses=getResponses().filter(r=>r.email===email&&r.evaluated);
   if(!user||!responses.length){alert('No evaluated submissions found for this candidate.');return;}
 
-  // Compute totals per test
   const testData=TESTS.map(t=>{
     const rec=responses.find(r=>r.testId===t.id);
     if(!rec) return {t,rec:null,scored:null,max:null,pct:null};
@@ -1261,7 +1349,6 @@ function renderCandidateReport(email){
   const overallPct=Math.round((totalScored/totalMax)*100);
   const grade=getGrade(overallPct);
 
-  // Top 3 strongest and weakest questions across all tests
   let allQScores=[];
   testData.forEach(({t,rec})=>{
     if(!rec) return;
@@ -1277,7 +1364,6 @@ function renderCandidateReport(email){
   const reportGenTime = new Date().toLocaleString('en-IN');
   const s=$('screen-admin');
 
-  // Build the inner report HTML (shared between screen render and download)
   const reportBodyHTML = buildReportHTML(user, testData, totalScored, totalMax, overallPct, grade, top3, bot3, reportGenTime);
 
   s.innerHTML=`
@@ -1294,16 +1380,11 @@ function renderCandidateReport(email){
     </div>`;
 
   $('btn-back-list').onclick=()=>{renderAdmin(); $('tab-candidates').click();};
-  $('btn-download-report').onclick=()=>downloadReport(user, reportBodyHTML, reportGenTime);
+  $('btn-download-report').onclick=()=>downloadReport(user, reportBodyHTML, reportGenTime, testData, totalScored, totalMax, overallPct, grade);
 }
 
-// ─────────────────────────────────────────────
-// BUILD REPORT HTML — shared renderer used by
-// both the on-screen view and the download file
-// ─────────────────────────────────────────────
 function buildReportHTML(user, testData, totalScored, totalMax, overallPct, grade, top3, bot3, reportGenTime){
   return `
-      <!-- HEADER -->
       <div class="report-header">
         <div>
           <div class="report-candidate-name">${user.name}</div>
@@ -1317,8 +1398,6 @@ function buildReportHTML(user, testData, totalScored, totalMax, overallPct, grad
           <div class="report-grade-badge ${grade.cls}">${grade.label}</div>
         </div>
       </div>
-
-      <!-- PER-TEST CARDS -->
       <div class="report-tests-grid">
         ${testData.map(({t,rec,scored,max,pct})=>{
           if(!rec) return `<div class="report-test-card"><div class="rtc-header"><div><div class="tc-num ${t.color}" style="width:32px;height:32px;font-size:12px;display:inline-flex;margin-bottom:6px">T${t.id}</div><div class="rtc-title">${t.title}</div></div></div><div class="rtc-not-evaluated">Not submitted / Not evaluated</div></div>`;
@@ -1333,8 +1412,6 @@ function buildReportHTML(user, testData, totalScored, totalMax, overallPct, grad
           </div>`;
         }).join('')}
       </div>
-
-      <!-- STRENGTHS / WEAKNESSES -->
       <div class="report-strengths-wrap">
         <div class="report-str-card">
           <div class="rsc-title strength">💪 Top Performing Questions</div>
@@ -1345,8 +1422,6 @@ function buildReportHTML(user, testData, totalScored, totalMax, overallPct, grad
           ${bot3.map(q=>`<div class="rsc-q-row"><span style="flex:1">${q.label}: ${q.text}</span><span class="rsc-q-score score-lo">${q.score}/${MAX_SCORE_PER_Q}</span></div>`).join('')}
         </div>
       </div>
-
-      <!-- DETAILED QUESTION-LEVEL SCORES -->
       <div class="report-questions-section">
         <div class="section-title" style="margin-bottom:12px">Question-wise Scores</div>
         ${testData.map(({t,rec,scored,max,pct})=>{
@@ -1373,15 +1448,7 @@ function buildReportHTML(user, testData, totalScored, totalMax, overallPct, grad
       </div>`;
 }
 
-// ─────────────────────────────────────────────
-// DOWNLOAD REPORT — generates a fully self-
-// contained HTML file with all CSS inlined.
-// Opens in browser as a new tab and auto-triggers
-// download as  CandidateName_BDM_Report.html
-// The file can be opened offline, printed to PDF,
-// or shared via email — no internet needed.
-// ─────────────────────────────────────────────
-function downloadReport(user, reportBodyHTML, reportGenTime){
+function downloadReport(user, reportBodyHTML, reportGenTime, testData, totalScored, totalMax, overallPct, grade){
   const safeName = user.name.replace(/\s+/g,'_');
   const fileName = `${safeName}_BDM_Report.html`;
 
@@ -1396,15 +1463,11 @@ function downloadReport(user, reportBodyHTML, reportGenTime){
 *{box-sizing:border-box;margin:0;padding:0}
 body{font-family:'DM Sans',sans-serif;background:#F7F5F0;color:#1A1A1A;font-size:14px;line-height:1.6;padding:0}
 .report-wrap{padding:2rem;max-width:900px;margin:0 auto}
-
-/* top action bar — hidden on print */
 .download-bar{background:#1A3A2A;padding:.75rem 2rem;display:flex;align-items:center;justify-content:space-between;gap:1rem}
 .download-bar-title{font-family:'DM Serif Display',serif;font-size:18px;color:#F5C842}
 .download-bar-sub{font-size:12px;color:rgba(255,255,255,.5);margin-top:2px}
 .btn-pdf{background:#E8A020;color:#1A3A2A;border:none;border-radius:8px;padding:8px 20px;font-size:13px;font-weight:600;cursor:pointer;font-family:'DM Sans',sans-serif}
 .btn-pdf:hover{background:#F5C842}
-
-/* report styles */
 .report-header{background:#1A3A2A;border-radius:12px;padding:2rem;margin-bottom:1.5rem;display:flex;align-items:center;justify-content:space-between;gap:1rem;flex-wrap:wrap}
 .report-candidate-name{font-family:'DM Serif Display',serif;font-size:28px;color:#fff}
 .report-candidate-meta{font-size:13px;color:rgba(255,255,255,.6);margin-top:4px}
@@ -1448,20 +1511,14 @@ body{font-family:'DM Sans',sans-serif;background:#F7F5F0;color:#1A1A1A;font-size
 .rqs-q-text{font-size:12px;color:#555;line-height:1.5}
 .rqs-q-comment{font-size:11px;color:#999;font-style:italic;margin-top:3px}
 .rqs-q-score{font-size:14px;font-weight:700;text-align:center}
-
-/* score summary table */
 .score-summary-table{width:100%;border-collapse:collapse;background:#fff;border-radius:12px;overflow:hidden;margin-bottom:1.5rem;border:1px solid rgba(26,58,42,.12)}
 .score-summary-table th{background:#1A3A2A;color:#fff;padding:10px 16px;font-size:12px;text-align:left;font-weight:600;letter-spacing:.04em}
 .score-summary-table td{padding:10px 16px;font-size:13px;border-bottom:1px solid rgba(26,58,42,.08)}
 .score-summary-table tr:last-child td{border-bottom:none;font-weight:600;background:#F7F5F0}
-.score-summary-table tr:last-child td:first-child{color:#1A3A2A}
-
 @media print{
   .download-bar{display:none!important}
   body{background:#fff;padding:0}
   .report-wrap{padding:1rem}
-  .report-tests-grid,.report-strengths-wrap{grid-template-columns:1fr 1fr}
-  .rqs-test-block{page-break-inside:avoid}
 }
 @media(max-width:600px){
   .report-tests-grid,.report-strengths-wrap{grid-template-columns:1fr}
@@ -1470,8 +1527,6 @@ body{font-family:'DM Sans',sans-serif;background:#F7F5F0;color:#1A1A1A;font-size
 </style>
 </head>
 <body>
-
-<!-- Action bar -->
 <div class="download-bar">
   <div>
     <div class="download-bar-title">Educart BDM — Candidate Report</div>
@@ -1479,41 +1534,23 @@ body{font-family:'DM Sans',sans-serif;background:#F7F5F0;color:#1A1A1A;font-size
   </div>
   <button class="btn-pdf" onclick="window.print()">🖨 Print / Save as PDF</button>
 </div>
-
 <div class="report-wrap">
-
-  <!-- Score summary table at top for quick reference -->
   <table class="score-summary-table" style="margin-top:1.5rem">
-    <thead>
-      <tr>
-        <th>Test</th>
-        <th>Score</th>
-        <th>Marks</th>
-        <th>Grade</th>
-      </tr>
-    </thead>
+    <thead><tr><th>Test</th><th>Score</th><th>Marks</th><th>Grade</th></tr></thead>
     <tbody>
       ${testData.map(({t,rec,scored,max,pct})=>{
         if(!rec) return `<tr><td>Test ${t.id}: ${t.title}</td><td>—</td><td>—</td><td style="color:#999">Not evaluated</td></tr>`;
         const g=getGrade(pct);
         return `<tr><td>Test ${t.id}: ${t.title}</td><td>${pct}%</td><td>${scored}/${max}</td><td>${g.label}</td></tr>`;
       }).join('')}
-      <tr>
-        <td>Overall Total</td>
-        <td>${overallPct}%</td>
-        <td>${totalScored}/${totalMax}</td>
-        <td>${grade.label}</td>
-      </tr>
+      <tr><td>Overall Total</td><td>${overallPct}%</td><td>${totalScored}/${totalMax}</td><td>${grade.label}</td></tr>
     </tbody>
   </table>
-
   ${reportBodyHTML}
-
 </div>
 </body>
 </html>`;
 
-  // Trigger download
   const blob = new Blob([fullHTML], { type: 'text/html;charset=utf-8' });
   const url  = URL.createObjectURL(blob);
   const a    = document.createElement('a');
@@ -1529,18 +1566,12 @@ body{font-family:'DM Sans',sans-serif;background:#F7F5F0;color:#1A1A1A;font-size
 // INIT — sync from sheet first, then boot app
 // ═══════════════════════════════════════════════
 (async function init(){
-  // Load local reattempt grants immediately (before async sync)
   reattemptGrants = getReattemptGrants();
-  // Sync from sheet (updates reattemptGrants with server state)
   await syncFromSheet();
 
   const sess = getSession();
   if (sess) {
-    // Try to find user with matching email+password in local storage
     let user = getUsers().find(u => u.email === sess.email && u.pass === sess.pass);
-
-    // If not found locally but email exists (synced from sheet, no password),
-    // show login screen so user can re-enter their password on this device
     if (!user) {
       clearSession();
       showScreen('screen-login');
