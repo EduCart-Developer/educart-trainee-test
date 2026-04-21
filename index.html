@@ -540,7 +540,9 @@ let S = {
 };
 
 // ═══════════════════════════════════════════════
-// STORAGE
+// STORAGE — localStorage is the local cache.
+// On load, data is synced FROM the Google Sheet
+// so the app works correctly on any device.
 // ═══════════════════════════════════════════════
 const getUsers      = () => JSON.parse(localStorage.getItem('bdm_users')    ||'[]');
 const saveUsers     = d  => localStorage.setItem('bdm_users',    JSON.stringify(d));
@@ -549,6 +551,86 @@ const saveResponses = d  => localStorage.setItem('bdm_resp',     JSON.stringify(
 const getSession    = () => JSON.parse(localStorage.getItem('bdm_session')  ||'null');
 const saveSession   = d  => localStorage.setItem('bdm_session',  JSON.stringify(d));
 const clearSession  = () => localStorage.removeItem('bdm_session');
+
+// ═══════════════════════════════════════════════
+// SHEET SYNC ENGINE
+// Fetches all data from the sheet and merges it
+// into localStorage. Runs on every page load.
+// Sheet is source of truth for cross-device data.
+// ═══════════════════════════════════════════════
+let syncDone = false;
+
+async function syncFromSheet() {
+  if (GOOGLE_SCRIPT_URL === 'YOUR_GOOGLE_APPS_SCRIPT_URL_HERE') return;
+  try {
+    loading(true, 'Syncing data…');
+    const res  = await fetch(GOOGLE_SCRIPT_URL + '?action=sync');
+    const data = await res.json();
+    if (data.status !== 'ok') throw new Error(data.message || 'Sync failed');
+
+    // ── Merge users ──
+    // Sheet users have no passwords (never stored for security).
+    // Keep local users that have passwords; add any new users from sheet.
+    const localUsers  = getUsers();
+    const sheetUsers  = data.users || [];
+    const mergedUsers = [...localUsers];
+    sheetUsers.forEach(su => {
+      if (!mergedUsers.find(u => u.email === su.email)) {
+        mergedUsers.push({ ...su, pass: '' });
+      }
+    });
+    saveUsers(mergedUsers);
+
+    // ── Merge submissions + evaluations ──
+    // Sheet is authoritative. Evaluation data from Evaluations tab
+    // is merged into each submission record.
+    const evalMap = {};
+    (data.evaluations || []).forEach(ev => {
+      evalMap[String(ev.submissionId)] = ev;
+    });
+
+    const sheetSubs = data.submissions || [];
+    const localSubs = getResponses();
+    const localById = {};
+    localSubs.forEach(r => { localById[String(r.id)] = r; });
+
+    const mergedSubs = [];
+    const seenIds    = new Set();
+
+    sheetSubs.forEach(ss => {
+      const id    = String(ss.id);
+      const local = localById[id];
+      const ev    = evalMap[id];
+      const rec   = local ? { ...local } : { ...ss };
+
+      if (ev) {
+        rec.scores         = ev.scores         || rec.scores   || {};
+        rec.comments       = ev.comments       || rec.comments || {};
+        rec.overallComment = ev.overallComment !== undefined ? ev.overallComment : (rec.overallComment || '');
+        rec.evaluated      = true;
+      } else {
+        if (!rec.scores)   rec.scores   = {};
+        if (!rec.comments) rec.comments = {};
+        if (rec.evaluated === undefined) rec.evaluated = false;
+      }
+
+      mergedSubs.push(rec);
+      seenIds.add(id);
+    });
+
+    // Keep local-only records not yet in sheet
+    localSubs.forEach(r => {
+      if (!seenIds.has(String(r.id))) mergedSubs.push(r);
+    });
+
+    saveResponses(mergedSubs);
+    syncDone = true;
+    loading(false);
+  } catch (err) {
+    console.warn('Sheet sync failed, using local data:', err.message);
+    loading(false);
+  }
+}
 
 // ═══════════════════════════════════════════════
 // UTILS
@@ -1352,14 +1434,28 @@ body{font-family:'DM Sans',sans-serif;background:#F7F5F0;color:#1A1A1A;font-size
 }
 
 // ═══════════════════════════════════════════════
-// INIT
+// INIT — sync from sheet first, then boot app
 // ═══════════════════════════════════════════════
-(function init(){
-  const sess=getSession();
-  if(sess){
-    const user=getUsers().find(u=>u.email===sess.email&&u.pass===sess.pass);
-    if(user){S.user=user;renderDashboard();showScreen('screen-dashboard');return;}
-    else clearSession();
+(async function init(){
+  // Always sync first so data is fresh on any device
+  await syncFromSheet();
+
+  const sess = getSession();
+  if (sess) {
+    // Try to find user with matching email+password in local storage
+    let user = getUsers().find(u => u.email === sess.email && u.pass === sess.pass);
+
+    // If not found locally but email exists (synced from sheet, no password),
+    // show login screen so user can re-enter their password on this device
+    if (!user) {
+      clearSession();
+      showScreen('screen-login');
+      return;
+    }
+    S.user = user;
+    renderDashboard();
+    showScreen('screen-dashboard');
+    return;
   }
   showScreen('screen-login');
 })();
