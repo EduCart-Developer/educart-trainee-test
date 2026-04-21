@@ -164,6 +164,7 @@ body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--text);min
 .pip{width:10px;height:10px;border-radius:50%;background:var(--border2)}
 .pip.done{background:var(--brand2)}
 .pip.evaluated{background:var(--accent)}
+.pip.pip-reattempt{outline:2px solid var(--accent);outline-offset:2px}
 
 /* ── DETAIL / EVALUATION VIEW ── */
 .detail-topbar{background:var(--surface);border-bottom:1px solid var(--border);padding:1rem 2rem;display:flex;align-items:center;gap:1rem;position:sticky;top:0;z-index:10}
@@ -554,80 +555,103 @@ const clearSession  = () => localStorage.removeItem('bdm_session');
 
 // ═══════════════════════════════════════════════
 // SHEET SYNC ENGINE
-// Fetches all data from the sheet and merges it
-// into localStorage. Runs on every page load.
-// Sheet is source of truth for cross-device data.
+// Pulls all data from the Google Sheet and merges
+// into localStorage. Sheet is source of truth.
+// Runs on every page load before anything is shown.
 // ═══════════════════════════════════════════════
 let syncDone = false;
+
+// Reattempt grants: { "email:testId": true }
+let reattemptGrants = {};
+
+function getReattemptGrants() {
+  try { return JSON.parse(localStorage.getItem('bdm_reattempts') || '{}'); } catch(e){ return {}; }
+}
+function saveReattemptGrants(d) { localStorage.setItem('bdm_reattempts', JSON.stringify(d)); }
 
 async function syncFromSheet() {
   if (GOOGLE_SCRIPT_URL === 'YOUR_GOOGLE_APPS_SCRIPT_URL_HERE') return;
   try {
-    loading(true, 'Syncing data…');
+    loading(true, 'Syncing data from server…');
+
     const res  = await fetch(GOOGLE_SCRIPT_URL + '?action=sync');
+    if (!res.ok) throw new Error('HTTP ' + res.status);
     const data = await res.json();
     if (data.status !== 'ok') throw new Error(data.message || 'Sync failed');
 
-    // ── Merge users ──
-    // Sheet users have no passwords (never stored for security).
-    // Keep local users that have passwords; add any new users from sheet.
+    // ── 1. Merge users ──
+    // Passwords are never in the sheet. Keep local pass values.
     const localUsers  = getUsers();
     const sheetUsers  = data.users || [];
     const mergedUsers = [...localUsers];
     sheetUsers.forEach(su => {
-      if (!mergedUsers.find(u => u.email === su.email)) {
-        mergedUsers.push({ ...su, pass: '' });
-      }
+      const existing = mergedUsers.find(u => u.email === su.email);
+      if (!existing) mergedUsers.push({ ...su, pass: '' });
+      // if exists locally, keep local record (has password)
     });
     saveUsers(mergedUsers);
 
-    // ── Merge submissions + evaluations ──
-    // Sheet is authoritative. Evaluation data from Evaluations tab
-    // is merged into each submission record.
+    // ── 2. Build evaluation map keyed by submissionId ──
     const evalMap = {};
     (data.evaluations || []).forEach(ev => {
       evalMap[String(ev.submissionId)] = ev;
     });
 
+    // ── 3. Merge submissions ──
+    // Sheet is authoritative source of all submissions.
+    // Local records are kept only if not yet in sheet.
     const sheetSubs = data.submissions || [];
     const localSubs = getResponses();
     const localById = {};
     localSubs.forEach(r => { localById[String(r.id)] = r; });
 
-    const mergedSubs = [];
-    const seenIds    = new Set();
+    const merged  = [];
+    const seenIds = new Set();
 
-    sheetSubs.forEach(ss => {
-      const id    = String(ss.id);
+    sheetSubs.forEach(sheetRec => {
+      const id    = String(sheetRec.id);
       const local = localById[id];
-      const ev    = evalMap[id];
-      const rec   = local ? { ...local } : { ...ss };
+      // Prefer local record (may have richer data); fall back to sheet record
+      const rec   = local ? { ...local } : { ...sheetRec };
 
+      // Always apply latest evaluation from sheet (overrides local eval)
+      const ev = evalMap[id];
       if (ev) {
-        rec.scores         = ev.scores         || rec.scores   || {};
-        rec.comments       = ev.comments       || rec.comments || {};
-        rec.overallComment = ev.overallComment !== undefined ? ev.overallComment : (rec.overallComment || '');
+        rec.scores         = ev.scores         || {};
+        rec.comments       = ev.comments       || {};
+        rec.overallComment = ev.overallComment || '';
         rec.evaluated      = true;
       } else {
         if (!rec.scores)   rec.scores   = {};
         if (!rec.comments) rec.comments = {};
+        if (!rec.notes)    rec.notes    = {};
         if (rec.evaluated === undefined) rec.evaluated = false;
       }
 
-      mergedSubs.push(rec);
+      merged.push(rec);
       seenIds.add(id);
     });
 
-    // Keep local-only records not yet in sheet
+    // Keep local-only records (just submitted, not yet synced to sheet)
     localSubs.forEach(r => {
-      if (!seenIds.has(String(r.id))) mergedSubs.push(r);
+      if (!seenIds.has(String(r.id))) merged.push(r);
     });
 
-    saveResponses(mergedSubs);
+    saveResponses(merged);
+
+    // ── 4. Reattempt grants ──
+    const grants = {};
+    (data.reattempts || []).forEach(rt => {
+      if (rt.status === 'active') grants[rt.email + ':' + rt.testId] = true;
+    });
+    saveReattemptGrants(grants);
+    reattemptGrants = grants;
+
     syncDone = true;
     loading(false);
   } catch (err) {
-    console.warn('Sheet sync failed, using local data:', err.message);
+    console.warn('Sheet sync failed — using local cache:', err.message);
+    reattemptGrants = getReattemptGrants();
     loading(false);
   }
 }
@@ -643,7 +667,16 @@ const showErr    = (id,msg) => { const e=$(id); e.textContent=msg; e.style.displ
 const hideErr    = id  => { const e=$(id); e.style.display='none'; };
 const initials   = name=> name.trim().split(' ').map(w=>w[0]).join('').toUpperCase().slice(0,2);
 const loading    = (show,msg='Please wait...')=>{ $('loading-overlay').classList.toggle('open',show); $('loading-msg').textContent=msg; };
-const hasCompleted=(email,testId)=>getResponses().some(r=>r.email===email&&r.testId===testId);
+// hasCompleted returns true if candidate has a submission AND no active reattempt grant
+function hasCompleted(email, testId) {
+  const hasSubmission = getResponses().some(r => r.email === email && r.testId === testId);
+  if (!hasSubmission) return false;
+  // If admin granted a reattempt, treat as not completed (allow retake)
+  const key = email + ':' + testId;
+  const grants = reattemptGrants || getReattemptGrants();
+  if (grants[key]) return false;
+  return true;
+}
 
 function getGrade(pct){
   if(pct>=85) return {label:'Excellent',cls:'grade-a'};
@@ -821,6 +854,16 @@ async function doSubmit(auto){
     submittedAt:new Date().toLocaleString('en-IN'), notes:{},
     scores:{}, comments:{}, overallComment:'', evaluated:false
   };
+  // Revoke reattempt grant if this was a reattempt (so it locks again)
+  const grantKey = rec.email + ':' + rec.testId;
+  if (reattemptGrants[grantKey]) {
+    delete reattemptGrants[grantKey];
+    saveReattemptGrants(reattemptGrants);
+    // Tell the sheet to revoke it too
+    if (GOOGLE_SCRIPT_URL !== 'YOUR_GOOGLE_APPS_SCRIPT_URL_HERE') {
+      fetch(GOOGLE_SCRIPT_URL, { method:'POST', body: JSON.stringify({ type:'revoke_reattempt', email: rec.email, testId: rec.testId }) }).catch(()=>{});
+    }
+  }
   const all=getResponses(); all.push(rec); saveResponses(all);
   $('done-answered').textContent=answeredCount;
   $('done-time').textContent=Math.round(elapsed/60)+'m';
@@ -836,7 +879,7 @@ async function doSubmit(auto){
 async function sendToSheets(rec){
   if(GOOGLE_SCRIPT_URL==='YOUR_GOOGLE_APPS_SCRIPT_URL_HERE') return;
   try {
-    const flat={type:'submission',name:rec.name,email:rec.email,phone:rec.phone,testId:rec.testId,testTitle:rec.testTitle,tabSwitches:rec.tabSwitches,timeTaken:rec.timeTaken,autoSubmit:rec.autoSubmit,submittedAt:rec.submittedAt};
+    const flat={type:'submission',id:rec.id,name:rec.name,email:rec.email,phone:rec.phone,testId:rec.testId,testTitle:rec.testTitle,tabSwitches:rec.tabSwitches,timeTaken:rec.timeTaken,autoSubmit:rec.autoSubmit,submittedAt:rec.submittedAt};
     TESTS.find(t=>t.id===rec.testId).questions.forEach((q,i)=>{flat[`Q${i+1}`]=rec.answers[q.id]||'';});
     await fetch(GOOGLE_SCRIPT_URL,{method:'POST',body:JSON.stringify(flat)});
   } catch(e){}
@@ -917,7 +960,7 @@ function renderAdmin(){
     <div class="admin-header">
       <div class="admin-header-title">Admin Portal</div>
       <div style="display:flex;gap:8px">
-        <button class="btn-exit" id="btn-clear" style="background:rgba(192,57,43,.3);border-color:rgba(192,57,43,.5)">Clear Responses</button>
+        <button class="btn-exit" id="btn-sync-now" style="background:rgba(45,106,79,.4);border-color:rgba(45,106,79,.6)">↻ Sync Sheet</button>
         <button class="btn-exit" id="btn-admin-exit">← Exit</button>
       </div>
     </div>
@@ -935,7 +978,12 @@ function renderAdmin(){
       <div id="admin-tab-content"></div>
     </div>`;
   $('btn-admin-exit').onclick=()=>{ S.adminAuthed=false; if(S.user){renderDashboard();showScreen('screen-dashboard');}else showScreen('screen-login'); };
-  $('btn-clear').onclick=()=>{ if(confirm('Delete ALL responses?')){localStorage.removeItem('bdm_resp');renderAdmin();} };
+  $('btn-sync-now').onclick=async()=>{
+    $('btn-sync-now').textContent='Syncing…';
+    await syncFromSheet();
+    $('btn-sync-now').textContent='↻ Sync Sheet';
+    renderAdmin();
+  };
   $('tab-submissions').onclick=()=>{ $('tab-submissions').classList.add('active');$('tab-candidates').classList.remove('active');renderSubmissionsTab(); };
   $('tab-candidates').onclick=()=>{ $('tab-candidates').classList.add('active');$('tab-submissions').classList.remove('active');renderCandidatesTab(); };
   renderSubmissionsTab();
@@ -970,27 +1018,71 @@ function renderSubmissionsTab(){
 function renderCandidatesTab(){
   const users=getUsers(), c=$('admin-tab-content');
   if(!users.length){c.innerHTML=`<div class="empty-state"><div style="font-size:40px">👤</div><p>No candidates registered yet.</p></div>`;return;}
+  const grants = reattemptGrants || getReattemptGrants();
   c.innerHTML=users.map(u=>{
-    const done=TESTS.filter(t=>hasCompleted(u.email,t.id));
-    const recs=getResponses().filter(r=>r.email===u.email);
-    const allEvaluated=done.length===4&&recs.filter(r=>r.evaluated).length===4;
-    return `<div class="candidate-row">
-      <div style="flex:1">
-        <div class="resp-name">${u.name}</div>
-        <div class="resp-meta">${u.email} · ${u.phone||'—'} · Joined ${u.createdAt}</div>
+    const allRecs = getResponses().filter(r=>r.email===u.email);
+    // For display purposes use raw submission count (ignore reattempt grants)
+    const submittedTests = TESTS.filter(t=>allRecs.some(r=>r.testId===t.id));
+    const evaluatedRecs  = allRecs.filter(r=>r.evaluated);
+    const allEvaluated   = submittedTests.length===4 && evaluatedRecs.length>=4;
+    return `<div class="candidate-row" style="flex-direction:column;align-items:stretch;gap:10px">
+      <div style="display:flex;align-items:center;justify-content:space-between;gap:12px">
+        <div style="flex:1">
+          <div class="resp-name">${u.name}</div>
+          <div class="resp-meta">${u.email} · ${u.phone||'—'} · Joined ${u.createdAt}</div>
+        </div>
+        <div style="display:flex;align-items:center;gap:10px">
+          <div class="progress-pips">${TESTS.map(t=>{
+            const rec=allRecs.find(r=>r.testId===t.id);
+            const cls=rec?rec.evaluated?'evaluated pip done':'pip done':'pip';
+            const hasGrant=grants[u.email+':'+t.id];
+            return `<div class="${cls}${hasGrant?' pip-reattempt':''}" title="Test ${t.id}${rec?' — Submitted':''}${rec&&rec.evaluated?' — Evaluated':''}${hasGrant?' — Reattempt granted':''}"></div>`;
+          }).join('')}</div>
+          <span style="font-size:12px;color:var(--text3)">${submittedTests.length}/4</span>
+          ${allEvaluated?`<button class="btn-review" data-email="${u.email}">📊 Report</button>`:''}
+        </div>
       </div>
-      <div style="display:flex;align-items:center;gap:12px">
-        <div class="progress-pips">${TESTS.map(t=>{
-          const rec=recs.find(r=>r.testId===t.id);
-          const cls=rec?rec.evaluated?'evaluated pip done':'pip done':'pip';
-          return `<div class="${cls}" title="Test ${t.id}${rec&&rec.evaluated?' — Evaluated':''}"></div>`;
-        }).join('')}</div>
-        <span style="font-size:12px;color:var(--text3)">${done.length}/4 done</span>
-        ${allEvaluated?`<button class="btn-review" data-email="${u.email}">📊 Report</button>`:''}
+      <div style="display:flex;gap:6px;flex-wrap:wrap;padding-top:4px;border-top:1px solid var(--border)">
+        <span style="font-size:11px;color:var(--text3);align-self:center;text-transform:uppercase;letter-spacing:.05em;font-weight:600">Reattempt:</span>
+        ${TESTS.map(t=>{
+          const hasSubmission=allRecs.some(r=>r.testId===t.id);
+          const hasGrant=grants[u.email+':'+t.id];
+          if(!hasSubmission) return `<span class="tag" style="background:var(--surface2);color:var(--text3)">T${t.id} — Not attempted</span>`;
+          if(hasGrant) return `<button class="btn-revoke-reattempt tag tag-flag" data-email="${u.email}" data-tid="${t.id}" style="cursor:pointer;border:none;font-family:inherit">T${t.id} ✓ Granted — Revoke</button>`;
+          return `<button class="btn-grant-reattempt tag tag-clean" data-email="${u.email}" data-tid="${t.id}" style="cursor:pointer;border:none;font-family:inherit">T${t.id} — Allow Reattempt</button>`;
+        }).join('')}
       </div>
     </div>`;
   }).join('');
   c.querySelectorAll('.btn-review[data-email]').forEach(b=>{ b.onclick=()=>renderCandidateReport(b.dataset.email); });
+  c.querySelectorAll('.btn-grant-reattempt').forEach(b=>{
+    b.onclick=async()=>{
+      const email=b.dataset.email, tid=+b.dataset.tid;
+      b.textContent='Granting…'; b.disabled=true;
+      // Update local state
+      const g=reattemptGrants||getReattemptGrants();
+      g[email+':'+tid]=true;
+      saveReattemptGrants(g); reattemptGrants=g;
+      // Push to sheet
+      if(GOOGLE_SCRIPT_URL!=='YOUR_GOOGLE_APPS_SCRIPT_URL_HERE'){
+        try{ await fetch(GOOGLE_SCRIPT_URL,{method:'POST',body:JSON.stringify({type:'reattempt',email,testId:tid})}); }catch(e){}
+      }
+      renderCandidatesTab();
+    };
+  });
+  c.querySelectorAll('.btn-revoke-reattempt').forEach(b=>{
+    b.onclick=async()=>{
+      const email=b.dataset.email, tid=+b.dataset.tid;
+      b.textContent='Revoking…'; b.disabled=true;
+      const g=reattemptGrants||getReattemptGrants();
+      delete g[email+':'+tid];
+      saveReattemptGrants(g); reattemptGrants=g;
+      if(GOOGLE_SCRIPT_URL!=='YOUR_GOOGLE_APPS_SCRIPT_URL_HERE'){
+        try{ await fetch(GOOGLE_SCRIPT_URL,{method:'POST',body:JSON.stringify({type:'revoke_reattempt',email,testId:tid})}); }catch(e){}
+      }
+      renderCandidatesTab();
+    };
+  });
 }
 
 // ═══════════════════════════════════════════════
@@ -1437,7 +1529,9 @@ body{font-family:'DM Sans',sans-serif;background:#F7F5F0;color:#1A1A1A;font-size
 // INIT — sync from sheet first, then boot app
 // ═══════════════════════════════════════════════
 (async function init(){
-  // Always sync first so data is fresh on any device
+  // Load local reattempt grants immediately (before async sync)
+  reattemptGrants = getReattemptGrants();
+  // Sync from sheet (updates reattemptGrants with server state)
   await syncFromSheet();
 
   const sess = getSession();
