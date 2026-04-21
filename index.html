@@ -637,6 +637,59 @@ function stableId(email, testId, submittedAt) {
 }
 
 // ═══════════════════════════════════════════════
+// DATE FORMATTING & DATA NORMALIZATION
+// ═══════════════════════════════════════════════
+// Returns a date formatted as dd/mm/yyyy from whatever string / number we got.
+// Accepts: millis timestamps, ISO strings, `new Date().toString()` output,
+// `toLocaleString('en-IN')` output, etc.
+function fmtDate(v) {
+  if (v == null || v === '') return '—';
+  let d;
+  if (typeof v === 'number') d = new Date(v);
+  else if (/^\d{10,}$/.test(String(v).trim())) d = new Date(+v); // pure ms timestamp
+  else {
+    // Try en-IN "21/4/2026, 1:39:31 pm" first
+    const m = String(v).match(/^(\d{1,2})\/(\d{1,2})\/(\d{4})/);
+    if (m) {
+      const [_, dd, mm, yyyy] = m;
+      return `${dd.padStart(2,'0')}/${mm.padStart(2,'0')}/${yyyy}`;
+    }
+    d = new Date(v);
+  }
+  if (isNaN(d.getTime())) return String(v); // give up, show raw
+  const dd   = String(d.getDate()).padStart(2,'0');
+  const mm   = String(d.getMonth()+1).padStart(2,'0');
+  const yyyy = d.getFullYear();
+  return `${dd}/${mm}/${yyyy}`;
+}
+
+// Some historic submission rows in the sheet were written with an extra ID
+// column at position 0, shifting every downstream field by one. We detect
+// this pattern (name field looks like a date, email field has no '@', phone
+// field has '@') and remap the fields back into their correct slots so the
+// rest of the app can treat all rows uniformly.
+function normalizeShiftedSubmission(s) {
+  const email = String(s.email || '').trim();
+  const phone = String(s.phone || '').trim();
+  const name  = String(s.name  || '').trim();
+  const looksShifted =
+    !email.includes('@') &&
+    phone.includes('@') &&
+    /\d{4}/.test(name); // name slot contains a date-ish year
+  if (!looksShifted) return s;
+  return {
+    ...s,
+    submittedAt: name,                          // big date string was here
+    name:        email,                         // real candidate name
+    email:       phone,                         // real email address
+    phone:       String(s.testTitle || ''),     // real phone was pushed into testTitle slot
+    testTitle:   s.testTitle && !/^\+?\d[\d\s-]{6,}$/.test(String(s.testTitle))
+                   ? s.testTitle
+                   : ('Test ' + s.testId),      // fall back to generic test title
+  };
+}
+
+// ═══════════════════════════════════════════════
 // STORAGE
 // ═══════════════════════════════════════════════
 const getUsers      = () => JSON.parse(localStorage.getItem('bdm_users')    ||'[]');
@@ -686,11 +739,13 @@ async function syncFromSheet() {
     saveUsers(mergedUsers);
 
     // ── 2. Re-key all sheet submissions to stableId ──
-    //    Normalize emails to lowercase for consistent matching.
-    const sheetSubs = (data.submissions || []).map(s => {
+    //    First normalize any legacy column-shifted rows, then compute id from
+    //    the corrected fields so everything downstream gets clean data.
+    const sheetSubs = (data.submissions || []).map(raw => {
+      const s = normalizeShiftedSubmission(raw);
       const email = String(s.email || '').toLowerCase().trim();
-      const newId = stableId(email, s.testId, s.submittedAt);
-      return { ...s, email, id: newId };
+      const id = stableId(email, s.testId, s.submittedAt);
+      return { ...s, email, id };
     });
 
     // ── 3. Build evaluation map keyed by stableId ──
@@ -1116,7 +1171,7 @@ function renderSubmissionsTab(){
     return `<div class="response-row">
       <div style="flex:1;min-width:0">
         <div class="resp-name">${escHtml(r.name)}</div>
-        <div class="resp-meta">${escHtml(r.email)} · ${escHtml(r.submittedAt)}</div>
+        <div class="resp-meta">${escHtml(r.email)} · ${fmtDate(r.submittedAt)}</div>
       </div>
       <div style="display:flex;gap:6px;flex-wrap:wrap;align-items:center">
         <span class="tag tag-t${r.testId}">Test ${r.testId}</span>
@@ -1315,7 +1370,7 @@ function renderCandidateDetailView(email){
           </div>
           <div class="cd-test-bar"><div class="cd-test-bar-fill" style="width:${pct}%"></div></div>
         ` : ''}
-        <div class="cd-test-row"><span class="cd-test-row-lbl">Submitted</span><span class="cd-test-row-val">${escHtml(rec.submittedAt)}</span></div>
+        <div class="cd-test-row"><span class="cd-test-row-lbl">Submitted</span><span class="cd-test-row-val">${fmtDate(rec.submittedAt)}</span></div>
         <div class="cd-test-row"><span class="cd-test-row-lbl">Time Taken</span><span class="cd-test-row-val">${timeStr}${rec.autoSubmit?' (auto)':''}</span></div>
         <div class="cd-test-row"><span class="cd-test-row-lbl">Violations</span><span class="cd-test-row-val" style="color:${rec.tabSwitches>0?'var(--red)':'var(--green)'}">${rec.tabSwitches>0?rec.tabSwitches+' detected':'None'}</span></div>
       `;
@@ -1358,7 +1413,7 @@ function renderCandidateDetailView(email){
           <div class="cd-candidate-meta">
             <span>📧 ${escHtml(user.email)}</span>
             <span>📱 ${escHtml(user.phone||'—')}</span>
-            <span>📅 Joined ${escHtml(user.createdAt)}</span>
+            <span>📅 Joined ${fmtDate(user.createdAt)}</span>
           </div>
         </div>
         <div class="cd-head-stats">
@@ -1484,12 +1539,15 @@ function renderEvalDetail(rid){
   s.innerHTML=`
     <div class="detail-topbar">
       <button class="btn-exit" id="btn-back-list" style="background:transparent;border-color:var(--border2);color:var(--text)">← Back</button>
-      <div style="font-weight:600;font-size:15px;flex:1">${escHtml(r.name)} — ${escHtml(r.testTitle)}</div>
+      <div style="flex:1;min-width:0">
+        <div style="font-weight:600;font-size:15px;line-height:1.2">${escHtml(r.name)} — ${escHtml(r.testTitle)}</div>
+        <div style="font-size:12px;color:var(--text3);margin-top:2px">${fmtDate(r.submittedAt)}</div>
+      </div>
       <span class="tag ${r.tabSwitches>0?'tag-flag':'tag-clean'}">${r.tabSwitches>0?r.tabSwitches+' violation(s)':'Clean'}</span>
     </div>
     <div class="detail-body">
       <div class="detail-meta-card">
-        <div><div class="dm-item-lbl">Submitted</div><div class="dm-item-val">${escHtml(r.submittedAt)}</div></div>
+        <div><div class="dm-item-lbl">Submitted</div><div class="dm-item-val">${fmtDate(r.submittedAt)}</div></div>
         <div><div class="dm-item-lbl">Time Taken</div><div class="dm-item-val">${Math.round(r.timeTaken/60)}m ${r.timeTaken%60}s${r.autoSubmit?' (auto)':''}</div></div>
         <div><div class="dm-item-lbl">Email</div><div class="dm-item-val">${escHtml(r.email)}</div></div>
         <div><div class="dm-item-lbl">Phone</div><div class="dm-item-val">${escHtml(r.phone||'—')}</div></div>
