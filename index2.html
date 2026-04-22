@@ -148,6 +148,88 @@ body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--text);min
 .admin-tabs{display:flex;gap:4px;border-bottom:1px solid var(--border);margin-bottom:1.5rem}
 .admin-tab{padding:8px 18px;font-size:14px;cursor:pointer;border-bottom:2px solid transparent;color:var(--text3);transition:all .15s}
 .admin-tab.active{border-bottom:2px solid var(--brand2);color:var(--brand2);font-weight:500}
+
+/* Candidate search */
+.admin-search-row{display:flex;gap:10px;margin-bottom:1rem;align-items:center}
+.admin-search{flex:1;padding:10px 14px;border:1px solid var(--border2);border-radius:var(--radius-sm);font-family:'DM Sans',sans-serif;font-size:14px;background:var(--surface);outline:none;transition:border-color .2s}
+.admin-search:focus{border-color:var(--brand2);box-shadow:0 0 0 3px rgba(45,106,79,.1)}
+
+/* ── CANDIDATE CARD (new) ── */
+.candidate-card{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:1.25rem;margin-bottom:10px;cursor:pointer;transition:all .2s;display:flex;align-items:center;gap:1rem}
+.candidate-card:hover{border-color:var(--brand2);box-shadow:0 4px 16px rgba(26,58,42,.08);transform:translateY(-1px)}
+.cc-avatar{width:48px;height:48px;border-radius:50%;background:linear-gradient(135deg,var(--brand),var(--brand2));color:var(--accent2);display:flex;align-items:center;justify-content:center;font-weight:600;font-size:16px;flex-shrink:0}
+.cc-info{flex:1;min-width:0}
+.cc-name{font-size:15px;font-weight:600;color:var(--text)}
+.cc-meta{font-size:12px;color:var(--text3);margin-top:3px}
+.cc-tests{display:flex;gap:4px;margin-top:8px;flex-wrap:wrap}
+.cc-test-pill{font-size:10px;font-weight:600;padding:3px 8px;border-radius:50px;letter-spacing:.03em}
+.pill-not-attempted{background:var(--surface2);color:var(--text3)}
+.pill-submitted{background:#FFF3E0;color:#8A4A1A}
+.pill-evaluated{background:#E8F5E9;color:#1A6B3A}
+.pill-reattempt{background:#FDEDEC;color:#A32D2D}
+.cc-right{display:flex;flex-direction:column;align-items:flex-end;gap:4px;flex-shrink:0}
+.cc-progress{font-size:13px;font-weight:600;color:var(--text2)}
+.cc-score{font-family:'DM Serif Display',serif;font-size:22px;color:var(--brand2);line-height:1}
+.cc-score-lbl{font-size:10px;color:var(--text3);text-transform:uppercase;letter-spacing:.05em}
+.cc-arrow{font-size:18px;color:var(--text3);margin-left:8px}
+
+/* ── CANDIDATE DETAIL VIEW (new) ── */
+.cd-topbar{background:var(--surface);border-bottom:1px solid var(--border);padding:1rem 2rem;display:flex;align-items:center;gap:1rem;position:sticky;top:0;z-index:10}
+.cd-body{padding:2rem;max-width:1000px;margin:0 auto}
+.cd-header-card{background:linear-gradient(135deg,var(--brand),#143021);border-radius:var(--radius);padding:2rem;margin-bottom:1.5rem;color:#fff;display:flex;align-items:center;gap:1.5rem;flex-wrap:wrap}
+.cd-avatar-lg{width:72px;height:72px;border-radius:50%;background:rgba(245,200,66,.15);color:var(--accent2);display:flex;align-items:center;justify-content:center;font-weight:700;font-size:24px;font-family:'DM Serif Display',serif;flex-shrink:0;border:2px solid rgba(245,200,66,.25)}
+.cd-head-info{flex:1;min-width:220px}
+.cd-candidate-name{font-family:'DM Serif Display',serif;font-size:26px;color:#fff;line-height:1.2}
+.cd-candidate-meta{font-size:13px;color:rgba(255,255,255,.65);margin-top:4px}
+.cd-candidate-meta span{margin-right:14px}
+.cd-head-stats{display:flex;gap:1.25rem;align-items:center}
+.cd-stat-box{text-align:center}
+.cd-stat-val{font-family:'DM Serif Display',serif;font-size:28px;color:var(--accent2);line-height:1}
+.cd-stat-lbl{font-size:10px;color:rgba(255,255,255,.5);text-transform:uppercase;letter-spacing:.05em;margin-top:2px}
+.cd-actions{display:flex;gap:8px;margin-left:auto;flex-wrap:wrap}
+.cd-btn{padding:9px 16px;border-radius:var(--radius-sm);font-size:13px;font-weight:500;cursor:pointer;font-family:'DM Sans',sans-serif;border:none;transition:all .2s;white-space:nowrap}
+.cd-btn-primary{background:var(--accent);color:var(--brand)}
+.cd-btn-primary:hover{background:var(--accent2)}
+.cd-btn-ghost{background:rgba(255,255,255,.1);color:#fff;border:1px solid rgba(255,255,255,.25)}
+.cd-btn-ghost:hover{background:rgba(255,255,255,.2)}
+
+/* Test cards in candidate detail */
+.cd-tests-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:14px}
+.cd-test-card{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:1.5rem;display:flex;flex-direction:column;gap:12px;transition:all .2s;position:relative;overflow:hidden}
+.cd-test-card::before{content:'';position:absolute;top:0;left:0;right:0;height:3px;background:var(--border2)}
+.cd-test-card.cd-status-evaluated::before{background:linear-gradient(90deg,var(--brand2),var(--accent))}
+.cd-test-card.cd-status-submitted::before{background:var(--accent)}
+.cd-test-card.cd-status-not-attempted{opacity:.85}
+.cd-test-head{display:flex;align-items:flex-start;justify-content:space-between;gap:10px}
+.cd-test-left{display:flex;align-items:center;gap:12px;flex:1;min-width:0}
+.cd-test-num{width:36px;height:36px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-weight:700;font-size:13px;flex-shrink:0}
+.cd-test-title{font-size:14px;font-weight:600;color:var(--text);line-height:1.3}
+.cd-test-qcount{font-size:11px;color:var(--text3);margin-top:2px}
+.cd-test-status{font-size:10px;font-weight:600;padding:3px 10px;border-radius:50px;letter-spacing:.04em;text-transform:uppercase;white-space:nowrap}
+.cd-status-tag-evaluated{background:#E8F5E9;color:#1A6B3A}
+.cd-status-tag-submitted{background:#FFF3E0;color:#8A4A1A}
+.cd-status-tag-not{background:var(--surface2);color:var(--text3)}
+.cd-test-body{flex:1;padding:10px 0;border-top:1px solid var(--border);border-bottom:1px solid var(--border)}
+.cd-test-row{display:flex;justify-content:space-between;align-items:center;font-size:12px;padding:3px 0}
+.cd-test-row-lbl{color:var(--text3);text-transform:uppercase;letter-spacing:.04em;font-weight:500;font-size:10px}
+.cd-test-row-val{color:var(--text);font-weight:500}
+.cd-test-score-big{font-family:'DM Serif Display',serif;font-size:32px;color:var(--brand2);line-height:1}
+.cd-test-score-pct{font-size:12px;color:var(--text3);margin-top:2px}
+.cd-test-bar{height:6px;background:var(--surface2);border-radius:3px;overflow:hidden;margin:8px 0}
+.cd-test-bar-fill{height:100%;background:linear-gradient(90deg,var(--brand2),var(--accent));border-radius:3px;transition:width .6s}
+.cd-test-empty{font-size:13px;color:var(--text3);text-align:center;padding:1.5rem 0;font-style:italic}
+.cd-test-actions{display:flex;gap:6px;flex-wrap:wrap}
+.cd-action-btn{flex:1;padding:8px 12px;border-radius:var(--radius-sm);font-size:12px;font-weight:500;cursor:pointer;font-family:'DM Sans',sans-serif;border:none;transition:all .2s;white-space:nowrap}
+.cd-action-primary{background:var(--brand);color:#fff}
+.cd-action-primary:hover{background:var(--brand2)}
+.cd-action-secondary{background:var(--surface2);color:var(--text);border:1px solid var(--border2)}
+.cd-action-secondary:hover{background:var(--border2)}
+.cd-action-warn{background:rgba(232,160,32,.12);color:#8A4A1A;border:1px solid rgba(232,160,32,.4)}
+.cd-action-warn:hover{background:rgba(232,160,32,.25)}
+.cd-action-danger{background:rgba(192,57,43,.08);color:var(--red);border:1px solid rgba(192,57,43,.3)}
+.cd-action-danger:hover{background:rgba(192,57,43,.15)}
+
+/* Submissions tab rows (unchanged) */
 .response-row{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:14px 18px;margin-bottom:8px;display:flex;align-items:center;justify-content:space-between;gap:12px}
 .resp-name{font-weight:600;font-size:14px;color:var(--text)}
 .resp-meta{font-size:12px;color:var(--text3);margin-top:2px}
@@ -159,11 +241,6 @@ body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--text);min
 .btn-review{background:var(--brand);color:#fff;border:none;border-radius:var(--radius-sm);padding:7px 16px;font-size:12px;font-family:'DM Sans',sans-serif;font-weight:500;cursor:pointer;white-space:nowrap;transition:background .2s}
 .btn-review:hover{background:var(--brand2)}
 .empty-state{text-align:center;padding:4rem 2rem;color:var(--text3)}
-.candidate-row{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:14px 18px;margin-bottom:8px;display:flex;align-items:center;justify-content:space-between;gap:12px}
-.progress-pips{display:flex;gap:4px}
-.pip{width:10px;height:10px;border-radius:50%;background:var(--border2)}
-.pip.done{background:var(--brand2)}
-.pip.evaluated{background:var(--accent)}
 
 /* ── DETAIL / EVALUATION VIEW ── */
 .detail-topbar{background:var(--surface);border-bottom:1px solid var(--border);padding:1rem 2rem;display:flex;align-items:center;gap:1rem;position:sticky;top:0;z-index:10}
@@ -264,7 +341,7 @@ body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--text);min
 /* ── MODALS ── */
 .modal-overlay{position:fixed;inset:0;background:rgba(0,0,0,.45);display:none;align-items:center;justify-content:center;z-index:999;padding:1rem}
 .modal-overlay.open{display:flex}
-.modal-box{background:var(--surface);border-radius:16px;padding:2rem;max-width:400px;width:100%;text-align:center}
+.modal-box{background:var(--surface);border-radius:16px;padding:2rem;max-width:440px;width:100%;text-align:center}
 .modal-title{font-family:'DM Serif Display',serif;font-size:22px;color:var(--brand);margin-bottom:8px}
 .modal-sub{font-size:14px;color:var(--text2);margin-bottom:1.5rem;line-height:1.6}
 .modal-btns{display:flex;gap:10px}
@@ -272,6 +349,8 @@ body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--text);min
 .btn-modal-cancel:hover{background:var(--surface2)}
 .btn-modal-confirm{flex:1;padding:11px;border:none;border-radius:var(--radius-sm);font-family:'DM Sans',sans-serif;font-size:14px;font-weight:500;cursor:pointer;background:var(--brand);color:#fff;transition:background .2s}
 .btn-modal-confirm:hover{background:var(--brand2)}
+.btn-modal-confirm.danger{background:var(--red)}
+.btn-modal-confirm.danger:hover{background:#9d2f23}
 
 /* ── LOADING ── */
 .loading-overlay{position:fixed;inset:0;background:rgba(247,245,240,.92);display:none;align-items:center;justify-content:center;z-index:9999;flex-direction:column;gap:12px;font-size:15px;color:var(--text2)}
@@ -286,7 +365,7 @@ body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--text);min
 .login-sub{font-size:13px;color:var(--text3);margin-bottom:2rem}
 
 @media print {
-  .detail-topbar,.admin-header,.btn-save-eval,.btn-print-report,.btn-exit{display:none!important}
+  .detail-topbar,.admin-header,.btn-save-eval,.btn-print-report,.btn-exit,.cd-topbar,.cd-actions{display:none!important}
   body{background:#fff}
   .report-wrap{padding:0}
 }
@@ -296,20 +375,25 @@ body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--text);min
   .auth-right{padding:1.5rem}
   .admin-metrics,.progress-overview{grid-template-columns:1fr 1fr}
   .detail-meta-card{grid-template-columns:1fr 1fr}
-  .done-stats,.report-tests-grid,.report-strengths-wrap{grid-template-columns:1fr}
+  .done-stats,.report-tests-grid,.report-strengths-wrap,.cd-tests-grid{grid-template-columns:1fr}
   .eval-row{grid-template-columns:1fr}
+  .cd-head-stats{width:100%;justify-content:space-around;margin-top:1rem}
+  .cd-actions{width:100%}
 }
 </style>
 </head>
 <body>
 
-<!-- FULLSCREEN PROMPT -->
-<div class="modal-overlay open" id="fs-prompt">
+<!-- FULLSCREEN PROMPT (shown only before starting a test) -->
+<div class="modal-overlay" id="fs-prompt">
   <div class="modal-box">
     <div style="font-size:36px;margin-bottom:12px">🖥️</div>
     <div class="modal-title">Fullscreen Required</div>
-    <div class="modal-sub">This assessment must be taken in fullscreen. Exiting fullscreen during a test will be recorded as a violation.</div>
-    <button class="btn-modal-confirm" id="btn-enter-fs" style="width:100%">Enter Fullscreen & Continue</button>
+    <div class="modal-sub">This test must be taken in fullscreen. <strong>Exiting fullscreen or switching tabs will automatically submit your test.</strong> Make sure you are ready before continuing.</div>
+    <div class="modal-btns">
+      <button class="btn-modal-cancel" id="btn-fs-cancel">Cancel</button>
+      <button class="btn-modal-confirm" id="btn-enter-fs">Enter Fullscreen & Start Test</button>
+    </div>
   </div>
 </div>
 
@@ -323,7 +407,7 @@ body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--text);min
   </div>
 </div>
 
-<!-- SUBMIT MODAL -->
+<!-- GENERIC MODAL -->
 <div class="modal-overlay" id="modal">
   <div class="modal-box">
     <div class="modal-title" id="modal-title">Submit Test?</div>
@@ -537,7 +621,76 @@ const TESTS = [
 let S = {
   user:null, test:null, qIdx:0, answers:{}, startTime:null,
   timerInt:null, timeLeft:0, tabSwitches:0, adminAuthed:false,
+  adminActiveTab: 'candidates', candidateSearch: '',
 };
+
+// ═══════════════════════════════════════════════
+// STABLE ID HASH
+// Produces a deterministic numeric id from
+// (email + testId + submittedAt) so frontend and
+// backend always agree on submission identity.
+// ═══════════════════════════════════════════════
+function stableId(email, testId, submittedAt) {
+  const s = `${String(email||'').toLowerCase().trim()}|${testId}|${String(submittedAt||'').trim()}`;
+  let h = 5381;
+  for (let i = 0; i < s.length; i++) {
+    h = ((h * 33) + s.charCodeAt(i)) >>> 0;
+  }
+  return h;
+}
+
+// ═══════════════════════════════════════════════
+// DATE FORMATTING & DATA NORMALIZATION
+// ═══════════════════════════════════════════════
+// Returns a date formatted as dd/mm/yyyy from whatever string / number we got.
+// Accepts: millis timestamps, ISO strings, `new Date().toString()` output,
+// `toLocaleString('en-IN')` output, etc.
+function fmtDate(v) {
+  if (v == null || v === '') return '—';
+  let d;
+  if (typeof v === 'number') d = new Date(v);
+  else if (/^\d{10,}$/.test(String(v).trim())) d = new Date(+v); // pure ms timestamp
+  else {
+    // Try en-IN "21/4/2026, 1:39:31 pm" first
+    const m = String(v).match(/^(\d{1,2})\/(\d{1,2})\/(\d{4})/);
+    if (m) {
+      const [_, dd, mm, yyyy] = m;
+      return `${dd.padStart(2,'0')}/${mm.padStart(2,'0')}/${yyyy}`;
+    }
+    d = new Date(v);
+  }
+  if (isNaN(d.getTime())) return String(v); // give up, show raw
+  const dd   = String(d.getDate()).padStart(2,'0');
+  const mm   = String(d.getMonth()+1).padStart(2,'0');
+  const yyyy = d.getFullYear();
+  return `${dd}/${mm}/${yyyy}`;
+}
+
+// Some historic submission rows in the sheet were written with an extra ID
+// column at position 0, shifting every downstream field by one. We detect
+// this pattern (name field looks like a date, email field has no '@', phone
+// field has '@') and remap the fields back into their correct slots so the
+// rest of the app can treat all rows uniformly.
+function normalizeShiftedSubmission(s) {
+  const email = String(s.email || '').trim();
+  const phone = String(s.phone || '').trim();
+  const name  = String(s.name  || '').trim();
+  const looksShifted =
+    !email.includes('@') &&
+    phone.includes('@') &&
+    /\d{4}/.test(name); // name slot contains a date-ish year
+  if (!looksShifted) return s;
+  return {
+    ...s,
+    submittedAt: name,                          // big date string was here
+    name:        email,                         // real candidate name
+    email:       phone,                         // real email address
+    phone:       String(s.testTitle || ''),     // real phone was pushed into testTitle slot
+    testTitle:   s.testTitle && !/^\+?\d[\d\s-]{6,}$/.test(String(s.testTitle))
+                   ? s.testTitle
+                   : ('Test ' + s.testId),      // fall back to generic test title
+  };
+}
 
 // ═══════════════════════════════════════════════
 // STORAGE
@@ -550,6 +703,124 @@ const getSession    = () => JSON.parse(localStorage.getItem('bdm_session')  ||'n
 const saveSession   = d  => localStorage.setItem('bdm_session',  JSON.stringify(d));
 const clearSession  = () => localStorage.removeItem('bdm_session');
 
+// Reattempt grants: { "email:testId": true }
+let reattemptGrants = {};
+function getReattemptGrants() {
+  try { return JSON.parse(localStorage.getItem('bdm_reattempts') || '{}'); } catch(e){ return {}; }
+}
+function saveReattemptGrants(d) { localStorage.setItem('bdm_reattempts', JSON.stringify(d)); }
+
+// ═══════════════════════════════════════════════
+// SHEET SYNC ENGINE
+// ═══════════════════════════════════════════════
+let syncDone = false;
+
+async function syncFromSheet() {
+  if (GOOGLE_SCRIPT_URL === 'YOUR_GOOGLE_APPS_SCRIPT_URL_HERE') return;
+  try {
+    loading(true, 'Syncing data from server…');
+
+    const res  = await fetch(GOOGLE_SCRIPT_URL + '?action=sync');
+    if (!res.ok) throw new Error('HTTP ' + res.status);
+    const data = await res.json();
+    if (data.status !== 'ok') throw new Error(data.message || 'Sync failed');
+
+    // ── 1. Merge users (keep local passwords) ──
+    // First: migrate any local users with mixed-case emails → lowercase
+    // so they match the lowercased emails from the sheet.
+    const localUsers = getUsers().map(u => ({
+      ...u,
+      email: String(u.email || '').toLowerCase().trim(),
+    }));
+    const sheetUsers  = data.users || [];
+    const mergedUsers = [...localUsers];
+    sheetUsers.forEach(su => {
+      const suEmail = String(su.email || '').toLowerCase().trim();
+      const existing = mergedUsers.find(u => u.email === suEmail);
+      if (!existing) mergedUsers.push({ ...su, email: suEmail, pass: '' });
+    });
+    saveUsers(mergedUsers);
+
+    // ── 2. Re-key all sheet submissions to stableId ──
+    //    First normalize any legacy column-shifted rows, then compute id from
+    //    the corrected fields so everything downstream gets clean data.
+    const sheetSubs = (data.submissions || []).map(raw => {
+      const s = normalizeShiftedSubmission(raw);
+      const email = String(s.email || '').toLowerCase().trim();
+      const id = stableId(email, s.testId, s.submittedAt);
+      return { ...s, email, id };
+    });
+
+    // ── 3. Build evaluation map keyed by stableId ──
+    // Server sends eval.submissionId already mapped to the stableId of its matching submission
+    const evalMap = {};
+    (data.evaluations || []).forEach(ev => {
+      evalMap[String(ev.submissionId)] = ev;
+    });
+
+    // ── 4. Merge submissions with local cache ──
+    //    Normalize local submission emails too for consistent matching.
+    const localSubs = getResponses().map(r => ({
+      ...r,
+      email: String(r.email || '').toLowerCase().trim(),
+    }));
+    const localByKey = {};
+    localSubs.forEach(r => {
+      const k = `${r.email}|${r.testId}|${r.submittedAt}`;
+      localByKey[k] = r;
+    });
+
+    const merged = [];
+    const seenKeys = new Set();
+
+    sheetSubs.forEach(sheetRec => {
+      const k = `${sheetRec.email}|${sheetRec.testId}|${sheetRec.submittedAt}`;
+      const local = localByKey[k];
+      const rec = local ? { ...local, id: sheetRec.id } : { ...sheetRec };
+
+      // Always apply latest evaluation from sheet
+      const ev = evalMap[String(sheetRec.id)];
+      if (ev) {
+        rec.scores         = ev.scores         || {};
+        rec.comments       = ev.comments       || {};
+        rec.overallComment = ev.overallComment || '';
+        rec.evaluated      = true;
+      } else {
+        if (!rec.scores)   rec.scores   = {};
+        if (!rec.comments) rec.comments = {};
+        if (!rec.notes)    rec.notes    = {};
+        if (rec.evaluated === undefined) rec.evaluated = false;
+      }
+      merged.push(rec);
+      seenKeys.add(k);
+    });
+
+    // Keep local-only records (just submitted, not yet synced)
+    localSubs.forEach(r => {
+      const k = `${r.email}|${r.testId}|${r.submittedAt}`;
+      if (!seenKeys.has(k)) merged.push(r);
+    });
+
+    saveResponses(merged);
+
+    // ── 5. Reattempt grants ──
+    const grants = {};
+    (data.reattempts || []).forEach(rt => {
+      const em = String(rt.email || '').toLowerCase().trim();
+      if (rt.status === 'active') grants[em + ':' + rt.testId] = true;
+    });
+    saveReattemptGrants(grants);
+    reattemptGrants = grants;
+
+    syncDone = true;
+    loading(false);
+  } catch (err) {
+    console.warn('Sheet sync failed — using local cache:', err.message);
+    reattemptGrants = getReattemptGrants();
+    loading(false);
+  }
+}
+
 // ═══════════════════════════════════════════════
 // UTILS
 // ═══════════════════════════════════════════════
@@ -559,9 +830,18 @@ const wc         = t   => t.trim()?t.trim().split(/\s+/).length:0;
 const showScreen = id  => { document.querySelectorAll('.screen').forEach(s=>s.classList.remove('active')); $(id).classList.add('active'); };
 const showErr    = (id,msg) => { const e=$(id); e.textContent=msg; e.style.display='block'; };
 const hideErr    = id  => { const e=$(id); e.style.display='none'; };
-const initials   = name=> name.trim().split(' ').map(w=>w[0]).join('').toUpperCase().slice(0,2);
+const initials   = name=> String(name||'').trim().split(' ').map(w=>w[0]||'').join('').toUpperCase().slice(0,2);
 const loading    = (show,msg='Please wait...')=>{ $('loading-overlay').classList.toggle('open',show); $('loading-msg').textContent=msg; };
-const hasCompleted=(email,testId)=>getResponses().some(r=>r.email===email&&r.testId===testId);
+const escHtml    = s   => String(s==null?'':s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+
+function hasCompleted(email, testId) {
+  const hasSubmission = getResponses().some(r => r.email === email && r.testId === testId);
+  if (!hasSubmission) return false;
+  const key = email + ':' + testId;
+  const grants = reattemptGrants || getReattemptGrants();
+  if (grants[key]) return false;
+  return true;
+}
 
 function getGrade(pct){
   if(pct>=85) return {label:'Excellent',cls:'grade-a'};
@@ -573,28 +853,72 @@ function getGrade(pct){
 // ═══════════════════════════════════════════════
 // FULLSCREEN & ANTI-CHEAT
 // ═══════════════════════════════════════════════
-window.addEventListener('load',()=>{
-  $('btn-enter-fs').onclick=()=>{ requestFS(); $('fs-prompt').classList.remove('open'); };
-  $('btn-reenter-fs').onclick=()=>{ requestFS(); $('fs-warn-overlay').classList.remove('open'); };
-  if(document.fullscreenElement) $('fs-prompt').classList.remove('open');
+// Flow:
+//   1. Page load: no fullscreen prompt.
+//   2. User clicks "Start Test" → fs-prompt modal shown.
+//   3. User clicks "Enter Fullscreen & Start Test" → enter FS, then start test.
+//   4. During test: exiting fullscreen OR switching tabs => auto-submit
+//      the test with a violation reason attached to the record.
+window.addEventListener('load', () => {
+  $('btn-enter-fs').onclick = () => {
+    requestFS();
+    $('fs-prompt').classList.remove('open');
+    if (S.pendingTestId != null) {
+      const id = S.pendingTestId;
+      S.pendingTestId = null;
+      // Give the browser a tick to actually enter FS before the visibility/
+      // fullscreenchange listeners get wired up.
+      setTimeout(() => actuallyStartTest(id), 80);
+    }
+  };
+  $('btn-fs-cancel').onclick = () => {
+    S.pendingTestId = null;
+    $('fs-prompt').classList.remove('open');
+  };
 });
 function requestFS(){ const el=document.documentElement; if(el.requestFullscreen) el.requestFullscreen(); else if(el.webkitRequestFullscreen) el.webkitRequestFullscreen(); }
-document.addEventListener('fullscreenchange',onFsChange);
-document.addEventListener('webkitfullscreenchange',onFsChange);
+function exitFS(){
+  if (document.fullscreenElement && document.exitFullscreen) document.exitFullscreen().catch(()=>{});
+  else if (document.webkitFullscreenElement && document.webkitExitFullscreen) document.webkitExitFullscreen();
+}
+document.addEventListener('fullscreenchange', onFsChange);
+document.addEventListener('webkitfullscreenchange', onFsChange);
+
+// Prevent the same violation from submitting twice
+let violationSubmitting = false;
+
 function onFsChange(){
-  const inFs=!!(document.fullscreenElement||document.webkitFullscreenElement);
-  if(!inFs&&$('screen-test').classList.contains('active')){
-    S.tabSwitches++;
-    $('fs-warn-overlay').classList.add('open');
-    const wb=$('warn-banner'); if(wb){wb.style.display='block';wb.textContent=`⚠ Fullscreen exit detected (${S.tabSwitches}x) — recorded.`;}
+  const inFs = !!(document.fullscreenElement || document.webkitFullscreenElement);
+  if (!inFs && $('screen-test').classList.contains('active')) {
+    forceSubmitOnViolation('fullscreen_exit');
   }
 }
 function onVisibility(){
-  if(!$('screen-test').classList.contains('active')) return;
-  if(document.hidden){ S.tabSwitches++; const wb=$('warn-banner'); if(wb){wb.style.display='block';wb.textContent=`⚠ Tab switch detected (${S.tabSwitches}x) — recorded.`;} }
+  if (!$('screen-test').classList.contains('active')) return;
+  if (document.hidden) forceSubmitOnViolation('tab_switch');
 }
 
-// ── Block copy / paste / right-click everywhere ──
+function forceSubmitOnViolation(reason){
+  if (violationSubmitting) return;
+  if (!$('screen-test').classList.contains('active')) return;
+  violationSubmitting = true;
+  S.violationReason = reason;
+  S.tabSwitches = (S.tabSwitches || 0) + 1;
+  // Flash a warning banner so the user understands before the done screen loads
+  const wb = $('warn-banner');
+  if (wb) {
+    wb.style.display = 'block';
+    wb.style.background = '#FDEDEC';
+    wb.style.color = '#A32D2D';
+    wb.style.borderColor = 'rgba(192,57,43,.4)';
+    wb.textContent = reason === 'fullscreen_exit'
+      ? '⚠ Fullscreen exited — submitting your test now…'
+      : '⚠ Tab/window switch detected — submitting your test now…';
+  }
+  doSubmit(true);
+}
+
+// Block copy / paste / right-click
 document.addEventListener('contextmenu', e=>e.preventDefault());
 document.addEventListener('copy',  e=>e.preventDefault());
 document.addEventListener('cut',   e=>e.preventDefault());
@@ -675,12 +999,34 @@ $('goto-admin-dash').onclick=e=>{ e.preventDefault(); showAdminLogin(); };
 // ═══════════════════════════════════════════════
 // TEST ENGINE
 // ═══════════════════════════════════════════════
+// startTest() is the public entry point. It prompts the user to enter
+// fullscreen first; the test only actually begins once they confirm
+// (handled by the btn-enter-fs click → actuallyStartTest()).
 function startTest(id){
-  if(hasCompleted(S.user.email,id)){ alert('You have already completed this test.'); return; }
-  S.test=TESTS.find(t=>t.id===id); S.qIdx=0; S.answers={}; S.tabSwitches=0;
-  S.timeLeft=S.test.duration*60; S.startTime=Date.now();
-  showScreen('screen-test'); renderQ(); startTimer();
-  document.addEventListener('visibilitychange',onVisibility);
+  if (hasCompleted(S.user.email, id)) { alert('You have already completed this test.'); return; }
+  const inFs = !!(document.fullscreenElement || document.webkitFullscreenElement);
+  if (inFs) {
+    actuallyStartTest(id);
+  } else {
+    S.pendingTestId = id;
+    $('fs-prompt').classList.add('open');
+  }
+}
+
+function actuallyStartTest(id){
+  S.test        = TESTS.find(t => t.id === id);
+  S.qIdx        = 0;
+  S.answers     = {};
+  S.tabSwitches = 0;
+  S.timeLeft    = S.test.duration * 60;
+  S.startTime   = Date.now();
+  S.violationReason = null;
+  S._submitted  = false;
+  violationSubmitting = false;
+  showScreen('screen-test');
+  renderQ();
+  startTimer();
+  document.addEventListener('visibilitychange', onVisibility);
 }
 function renderQ(){
   const t=S.test,q=t.questions[S.qIdx],total=t.questions.length;
@@ -720,31 +1066,77 @@ $('btn-next').onclick=()=>{
   else showModal('Submit Test?','Once submitted, you cannot retake this test.',()=>doSubmit(false));
 };
 $('btn-submit-early').onclick=()=>showModal('Submit early?','Are you sure? This test can only be taken once.',()=>doSubmit(false));
-function showModal(title,sub,onConfirm){
-  $('modal-title').textContent=title;$('modal-sub').textContent=sub;
+
+function showModal(title,sub,onConfirm,opts){
+  opts = opts || {};
+  $('modal-title').textContent=title;
+  $('modal-sub').textContent=sub;
+  $('modal-confirm').textContent = opts.confirmText || 'Yes, submit';
+  $('modal-cancel').textContent  = opts.cancelText  || 'Go back';
+  $('modal-confirm').classList.toggle('danger', !!opts.danger);
   $('modal').classList.add('open');
   $('modal-confirm').onclick=()=>{ $('modal').classList.remove('open'); onConfirm(); };
+  $('modal-cancel').onclick=()=>{ $('modal').classList.remove('open'); };
 }
-$('modal-cancel').onclick=()=>$('modal').classList.remove('open');
 
 async function doSubmit(auto){
+  // Guard against double-submit (e.g. user clicks Submit, then a violation fires mid-flight)
+  if (S._submitted) return;
+  S._submitted = true;
+
   saveAns(); clearInterval(S.timerInt);
-  document.removeEventListener('visibilitychange',onVisibility);
-  const elapsed=Math.round((Date.now()-S.startTime)/1000);
-  const answeredCount=Object.values(S.answers).filter(v=>v&&v.trim()).length;
-  const rec={
-    id:Date.now(), name:S.user.name, email:S.user.email, phone:S.user.phone,
-    testId:S.test.id, testTitle:S.test.title, answers:{...S.answers},
-    tabSwitches:S.tabSwitches, timeTaken:elapsed, autoSubmit:auto,
-    submittedAt:new Date().toLocaleString('en-IN'), notes:{},
-    scores:{}, comments:{}, overallComment:'', evaluated:false
+  document.removeEventListener('visibilitychange', onVisibility);
+  const elapsed       = Math.round((Date.now() - S.startTime) / 1000);
+  const answeredCount = Object.values(S.answers).filter(v => v && v.trim()).length;
+  const submittedAt   = new Date().toLocaleString('en-IN');
+  const reason        = S.violationReason || null;
+  const rec = {
+    id:        stableId(S.user.email, S.test.id, submittedAt),
+    name:      S.user.name,
+    email:     S.user.email,
+    phone:     S.user.phone,
+    testId:    S.test.id,
+    testTitle: S.test.title,
+    answers:   { ...S.answers },
+    tabSwitches: S.tabSwitches,
+    timeTaken:   elapsed,
+    autoSubmit:  auto,
+    violation:   reason,     // 'fullscreen_exit' | 'tab_switch' | null
+    submittedAt,
+    notes: {},
+    scores: {}, comments: {}, overallComment: '', evaluated: false,
   };
-  const all=getResponses(); all.push(rec); saveResponses(all);
-  $('done-answered').textContent=answeredCount;
-  $('done-time').textContent=Math.round(elapsed/60)+'m';
-  $('done-flags').textContent=S.tabSwitches;
-  $('done-sub').textContent=auto?'Time ran out — your answers were auto-submitted.':'Your responses have been recorded. You cannot retake this test.';
+
+  // Revoke any active reattempt grant for this test
+  const grantKey = rec.email + ':' + rec.testId;
+  if (reattemptGrants[grantKey]) {
+    delete reattemptGrants[grantKey];
+    saveReattemptGrants(reattemptGrants);
+    if (GOOGLE_SCRIPT_URL !== 'YOUR_GOOGLE_APPS_SCRIPT_URL_HERE') {
+      fetch(GOOGLE_SCRIPT_URL, { method:'POST', body: JSON.stringify({ type:'revoke_reattempt', email: rec.email, testId: rec.testId }) }).catch(()=>{});
+    }
+  }
+  const all = getResponses(); all.push(rec); saveResponses(all);
+
+  $('done-answered').textContent = answeredCount;
+  $('done-time').textContent     = Math.round(elapsed / 60) + 'm';
+  $('done-flags').textContent    = S.tabSwitches;
+
+  let subMsg;
+  if (reason === 'fullscreen_exit') {
+    subMsg = '⚠ Your test was auto-submitted because you exited fullscreen mode. This has been recorded.';
+  } else if (reason === 'tab_switch') {
+    subMsg = '⚠ Your test was auto-submitted because you switched tabs or windows. This has been recorded.';
+  } else if (auto) {
+    subMsg = 'Time ran out — your answers were auto-submitted.';
+  } else {
+    subMsg = 'Your responses have been recorded.';
+  }
+  $('done-sub').textContent = subMsg;
+
   showScreen('screen-done');
+  // Now that the test is over, let the user exit fullscreen cleanly
+  exitFS();
   sendToSheets(rec);
 }
 
@@ -754,7 +1146,7 @@ async function doSubmit(auto){
 async function sendToSheets(rec){
   if(GOOGLE_SCRIPT_URL==='YOUR_GOOGLE_APPS_SCRIPT_URL_HERE') return;
   try {
-    const flat={type:'submission',name:rec.name,email:rec.email,phone:rec.phone,testId:rec.testId,testTitle:rec.testTitle,tabSwitches:rec.tabSwitches,timeTaken:rec.timeTaken,autoSubmit:rec.autoSubmit,submittedAt:rec.submittedAt};
+    const flat={type:'submission',id:rec.id,name:rec.name,email:rec.email,phone:rec.phone,testId:rec.testId,testTitle:rec.testTitle,tabSwitches:rec.tabSwitches,timeTaken:rec.timeTaken,autoSubmit:rec.autoSubmit,submittedAt:rec.submittedAt};
     TESTS.find(t=>t.id===rec.testId).questions.forEach((q,i)=>{flat[`Q${i+1}`]=rec.answers[q.id]||'';});
     await fetch(GOOGLE_SCRIPT_URL,{method:'POST',body:JSON.stringify(flat)});
   } catch(e){}
@@ -762,6 +1154,38 @@ async function sendToSheets(rec){
 async function sendSignupToSheets(user){
   if(GOOGLE_SCRIPT_URL==='YOUR_GOOGLE_APPS_SCRIPT_URL_HERE') return;
   try { await fetch(GOOGLE_SCRIPT_URL,{method:'POST',body:JSON.stringify({type:'signup',name:user.name,email:user.email,phone:user.phone||'',createdAt:user.createdAt})}); } catch(e){}
+}
+
+async function sendEvalToSheets(rec, testDef){
+  if(GOOGLE_SCRIPT_URL==='YOUR_GOOGLE_APPS_SCRIPT_URL_HERE') return;
+  try {
+    const maxScore = testDef.questions.length * MAX_SCORE_PER_Q;
+    const totalScore = Object.values(rec.scores||{}).reduce((a,b)=>a+(+b||0),0);
+    const pct = Math.round((totalScore/maxScore)*100);
+    const payload = {
+      type:          'evaluation',
+      submissionId:  String(rec.id),
+      submittedAt:   rec.submittedAt || '',
+      evaluatedAt:   new Date().toLocaleString('en-IN'),
+      name:          rec.name,
+      email:         rec.email,
+      phone:         rec.phone || '',
+      testId:        rec.testId,
+      testTitle:     rec.testTitle,
+      totalScore:    totalScore,
+      maxScore:      maxScore,
+      percentage:    pct,
+      grade:         pct>=85?'Excellent':pct>=70?'Good':pct>=50?'Average':'Needs Improvement',
+      overallComment:rec.overallComment || '',
+      tabSwitches:   rec.tabSwitches || 0,
+      autoSubmit:    rec.autoSubmit ? 'Yes' : 'No',
+    };
+    testDef.questions.forEach((q, i) => {
+      payload[`Q${i+1}_score`]   = rec.scores&&rec.scores[q.id]!==undefined ? rec.scores[q.id] : '';
+      payload[`Q${i+1}_comment`] = rec.comments&&rec.comments[q.id] ? rec.comments[q.id] : '';
+    });
+    await fetch(GOOGLE_SCRIPT_URL, { method:'POST', body: JSON.stringify(payload) });
+  } catch(e){}
 }
 
 $('btn-back-dash').onclick=()=>{ renderDashboard(); showScreen('screen-dashboard'); };
@@ -794,34 +1218,44 @@ function renderAdmin(){
   const responses=getResponses(), users=getUsers();
   const flagged=responses.filter(r=>r.tabSwitches>0).length;
   const evaluated=responses.filter(r=>r.evaluated).length;
+  const activeTab = S.adminActiveTab || 'candidates';
   $('screen-admin').innerHTML=`
     <div class="admin-header">
       <div class="admin-header-title">Admin Portal</div>
       <div style="display:flex;gap:8px">
-        <button class="btn-exit" id="btn-clear" style="background:rgba(192,57,43,.3);border-color:rgba(192,57,43,.5)">Clear Responses</button>
+        <button class="btn-exit" id="btn-sync-now" style="background:rgba(45,106,79,.4);border-color:rgba(45,106,79,.6)">↻ Sync Sheet</button>
         <button class="btn-exit" id="btn-admin-exit">← Exit</button>
       </div>
     </div>
     <div class="admin-body">
       <div class="admin-metrics">
-        <div class="admin-metric"><div class="admin-metric-val">${users.length}</div><div class="admin-metric-lbl">Registered</div></div>
+        <div class="admin-metric"><div class="admin-metric-val">${users.length}</div><div class="admin-metric-lbl">Candidates</div></div>
         <div class="admin-metric"><div class="admin-metric-val">${responses.length}</div><div class="admin-metric-lbl">Submissions</div></div>
         <div class="admin-metric"><div class="admin-metric-val">${evaluated}</div><div class="admin-metric-lbl">Evaluated</div></div>
         <div class="admin-metric"><div class="admin-metric-val">${flagged}</div><div class="admin-metric-lbl">Flagged</div></div>
       </div>
       <div class="admin-tabs">
-        <div class="admin-tab active" id="tab-submissions">Submissions (${responses.length})</div>
-        <div class="admin-tab" id="tab-candidates">Candidates (${users.length})</div>
+        <div class="admin-tab ${activeTab==='candidates'?'active':''}" id="tab-candidates">Candidates (${users.length})</div>
+        <div class="admin-tab ${activeTab==='submissions'?'active':''}" id="tab-submissions">Submissions (${responses.length})</div>
       </div>
       <div id="admin-tab-content"></div>
     </div>`;
   $('btn-admin-exit').onclick=()=>{ S.adminAuthed=false; if(S.user){renderDashboard();showScreen('screen-dashboard');}else showScreen('screen-login'); };
-  $('btn-clear').onclick=()=>{ if(confirm('Delete ALL responses?')){localStorage.removeItem('bdm_resp');renderAdmin();} };
-  $('tab-submissions').onclick=()=>{ $('tab-submissions').classList.add('active');$('tab-candidates').classList.remove('active');renderSubmissionsTab(); };
-  $('tab-candidates').onclick=()=>{ $('tab-candidates').classList.add('active');$('tab-submissions').classList.remove('active');renderCandidatesTab(); };
-  renderSubmissionsTab();
+  $('btn-sync-now').onclick=async()=>{
+    $('btn-sync-now').textContent='Syncing…';
+    await syncFromSheet();
+    $('btn-sync-now').textContent='↻ Sync Sheet';
+    renderAdmin();
+  };
+  $('tab-submissions').onclick=()=>{ S.adminActiveTab='submissions'; renderAdmin(); };
+  $('tab-candidates').onclick=()=>{ S.adminActiveTab='candidates'; renderAdmin(); };
+  if (activeTab === 'submissions') renderSubmissionsTab();
+  else renderCandidatesTab();
 }
 
+// ═══════════════════════════════════════════════
+// SUBMISSIONS TAB
+// ═══════════════════════════════════════════════
 function renderSubmissionsTab(){
   const responses=getResponses().slice().reverse();
   const c=$('admin-tab-content');
@@ -833,8 +1267,8 @@ function renderSubmissionsTab(){
     const pct=scored!==null?Math.round((scored/maxScore)*100):null;
     return `<div class="response-row">
       <div style="flex:1;min-width:0">
-        <div class="resp-name">${r.name}</div>
-        <div class="resp-meta">${r.email} · ${r.submittedAt}</div>
+        <div class="resp-name">${escHtml(r.name)}</div>
+        <div class="resp-meta">${escHtml(r.email)} · ${fmtDate(r.submittedAt)}</div>
       </div>
       <div style="display:flex;gap:6px;flex-wrap:wrap;align-items:center">
         <span class="tag tag-t${r.testId}">Test ${r.testId}</span>
@@ -848,30 +1282,342 @@ function renderSubmissionsTab(){
   c.querySelectorAll('.btn-review').forEach(b=>{ b.onclick=()=>renderEvalDetail(+b.dataset.rid); });
 }
 
+// ═══════════════════════════════════════════════
+// CANDIDATES TAB (new — primary view)
+// ═══════════════════════════════════════════════
+// Builds a unified candidate list from BOTH registered users AND
+// anyone who has submissions in the sheet (even if their signup row
+// never reached Registrations — e.g. submitted on a different device).
+function getAllCandidates(){
+  const users = getUsers();
+  const byEmail = {};
+
+  users.forEach(u => {
+    const em = String(u.email || '').toLowerCase().trim();
+    if (!em) return;
+    byEmail[em] = { ...u, email: em };
+  });
+
+  // Surface orphan submitters who never registered (or whose registration
+  // never synced). We build a synthetic user record from the submission.
+  getResponses().forEach(r => {
+    const em = String(r.email || '').toLowerCase().trim();
+    if (!em || byEmail[em]) return;
+    byEmail[em] = {
+      id:        em,
+      fname:     (r.name || '').split(' ')[0] || '',
+      lname:     (r.name || '').split(' ').slice(1).join(' ') || '',
+      name:      r.name || em,
+      email:     em,
+      phone:     r.phone || '',
+      pass:      '',
+      createdAt: r.submittedAt || '',
+      synthetic: true, // flag: derived from submission, not registration
+    };
+  });
+
+  return Object.values(byEmail);
+}
+
 function renderCandidatesTab(){
-  const users=getUsers(), c=$('admin-tab-content');
+  const users = getAllCandidates();
+  const c=$('admin-tab-content');
   if(!users.length){c.innerHTML=`<div class="empty-state"><div style="font-size:40px">👤</div><p>No candidates registered yet.</p></div>`;return;}
-  c.innerHTML=users.map(u=>{
-    const done=TESTS.filter(t=>hasCompleted(u.email,t.id));
-    const recs=getResponses().filter(r=>r.email===u.email);
-    const allEvaluated=done.length===4&&recs.filter(r=>r.evaluated).length===4;
-    return `<div class="candidate-row">
-      <div style="flex:1">
-        <div class="resp-name">${u.name}</div>
-        <div class="resp-meta">${u.email} · ${u.phone||'—'} · Joined ${u.createdAt}</div>
+
+  const q = (S.candidateSearch||'').toLowerCase().trim();
+  const filtered = q ? users.filter(u => (u.name||'').toLowerCase().includes(q) || (u.email||'').toLowerCase().includes(q) || (u.phone||'').includes(q)) : users;
+
+  const rows = filtered.map(u => {
+    const recs = getResponses().filter(r => String(r.email||'').toLowerCase() === u.email);
+    const submittedCount = TESTS.filter(t => recs.some(r => r.testId === t.id)).length;
+    const evaluatedRecs  = recs.filter(r => r.evaluated);
+    const evaluatedCount = evaluatedRecs.length;
+
+    // Overall score if all 4 tests evaluated
+    let overallHTML = '';
+    if (evaluatedCount === 4 && submittedCount === 4) {
+      let total=0, max=0;
+      evaluatedRecs.forEach(r => {
+        const t=TESTS.find(x=>x.id===r.testId); if(!t) return;
+        max += t.questions.length * MAX_SCORE_PER_Q;
+        total += Object.values(r.scores||{}).reduce((a,b)=>a+(+b||0),0);
+      });
+      const pct = max>0 ? Math.round((total/max)*100) : 0;
+      overallHTML = `<div class="cc-score">${pct}%</div><div class="cc-score-lbl">Overall</div>`;
+    } else {
+      overallHTML = `<div class="cc-progress">${submittedCount}/4 submitted</div><div class="cc-score-lbl">${evaluatedCount}/4 evaluated</div>`;
+    }
+
+    // Status pills per test
+    const pills = TESTS.map(t => {
+      const rec = recs.find(r => r.testId === t.id);
+      const hasGrant = (reattemptGrants||{})[u.email + ':' + t.id];
+      let cls='pill-not-attempted', label=`T${t.id}`;
+      if (hasGrant) { cls='pill-reattempt'; label=`T${t.id} ↻`; }
+      else if (rec && rec.evaluated) { cls='pill-evaluated'; label=`T${t.id} ✓`; }
+      else if (rec) { cls='pill-submitted'; label=`T${t.id} ●`; }
+      return `<span class="cc-test-pill ${cls}" title="Test ${t.id}: ${t.title}">${label}</span>`;
+    }).join('');
+
+    return `<div class="candidate-card" data-email="${escHtml(u.email)}">
+      <div class="cc-avatar">${initials(u.name)}</div>
+      <div class="cc-info">
+        <div class="cc-name">${escHtml(u.name)}</div>
+        <div class="cc-meta">${escHtml(u.email)} &nbsp;·&nbsp; ${escHtml(u.phone||'—')}</div>
+        <div class="cc-tests">${pills}</div>
       </div>
-      <div style="display:flex;align-items:center;gap:12px">
-        <div class="progress-pips">${TESTS.map(t=>{
-          const rec=recs.find(r=>r.testId===t.id);
-          const cls=rec?rec.evaluated?'evaluated pip done':'pip done':'pip';
-          return `<div class="${cls}" title="Test ${t.id}${rec&&rec.evaluated?' — Evaluated':''}"></div>`;
-        }).join('')}</div>
-        <span style="font-size:12px;color:var(--text3)">${done.length}/4 done</span>
-        ${allEvaluated?`<button class="btn-review" data-email="${u.email}">📊 Report</button>`:''}
-      </div>
+      <div class="cc-right">${overallHTML}</div>
+      <div class="cc-arrow">›</div>
     </div>`;
   }).join('');
-  c.querySelectorAll('.btn-review[data-email]').forEach(b=>{ b.onclick=()=>renderCandidateReport(b.dataset.email); });
+
+  c.innerHTML = `
+    <div class="admin-search-row">
+      <input class="admin-search" id="candidate-search" placeholder="🔍 Search by name, email, or phone..." value="${escHtml(S.candidateSearch||'')}">
+      <div style="font-size:12px;color:var(--text3);white-space:nowrap">${filtered.length} of ${users.length}</div>
+    </div>
+    ${rows || '<div class="empty-state"><p>No candidates match your search.</p></div>'}
+  `;
+
+  // Debounced search
+  const searchEl = $('candidate-search');
+  searchEl.oninput = () => {
+    S.candidateSearch = searchEl.value;
+    renderCandidatesTab();
+    // Restore focus + caret
+    setTimeout(()=>{ const el=$('candidate-search'); if(el){ el.focus(); el.setSelectionRange(el.value.length, el.value.length);} }, 0);
+  };
+
+  c.querySelectorAll('.candidate-card').forEach(card => {
+    card.onclick = () => renderCandidateDetailView(card.dataset.email);
+  });
+}
+
+// ═══════════════════════════════════════════════
+// CANDIDATE DETAIL VIEW (new)
+// ═══════════════════════════════════════════════
+function renderCandidateDetailView(email){
+  email = String(email || '').toLowerCase().trim();
+
+  // Try registered users first; fall back to synthesizing from submission.
+  let user = getUsers().find(u => String(u.email||'').toLowerCase() === email);
+  const recs = getResponses().filter(r => String(r.email||'').toLowerCase() === email);
+
+  if (!user) {
+    if (recs.length) {
+      const r = recs[0];
+      user = {
+        fname:     (r.name || '').split(' ')[0] || '',
+        lname:     (r.name || '').split(' ').slice(1).join(' ') || '',
+        name:      r.name || email,
+        email:     email,
+        phone:     r.phone || '',
+        createdAt: r.submittedAt || '—',
+        synthetic: true,
+      };
+    } else {
+      // Truly nothing for this email — go back to candidates list instead
+      // of blocking with an alert.
+      S.adminActiveTab = 'candidates';
+      renderCandidatesTab();
+      return;
+    }
+  }
+
+  const grants = reattemptGrants || getReattemptGrants();
+
+  // Compute overall score across evaluated tests
+  let totalScored=0, totalMax=0, evaluatedCount=0;
+  recs.forEach(r => {
+    if (!r.evaluated) return;
+    const t=TESTS.find(x=>x.id===r.testId); if(!t) return;
+    totalMax += t.questions.length * MAX_SCORE_PER_Q;
+    totalScored += Object.values(r.scores||{}).reduce((a,b)=>a+(+b||0),0);
+    evaluatedCount++;
+  });
+  const overallPct = totalMax>0 ? Math.round((totalScored/totalMax)*100) : 0;
+  const submittedCount = TESTS.filter(t => recs.some(r => r.testId === t.id)).length;
+  const canGenerateReport = submittedCount===4 && evaluatedCount===4;
+
+  // Build test cards
+  const testCardsHTML = TESTS.map(t => {
+    const rec = recs.find(r => r.testId === t.id);
+    const hasGrant = !!grants[email + ':' + t.id];
+
+    let statusClass='cd-status-not-attempted', statusTag='cd-status-tag-not', statusText='Not Attempted';
+    if (rec && rec.evaluated) { statusClass='cd-status-evaluated'; statusTag='cd-status-tag-evaluated'; statusText='Evaluated'; }
+    else if (rec) { statusClass='cd-status-submitted'; statusTag='cd-status-tag-submitted'; statusText='Pending Eval'; }
+
+    let bodyHTML='';
+    if (!rec) {
+      bodyHTML = `<div class="cd-test-empty">Candidate has not attempted this test yet.</div>`;
+    } else {
+      const maxScore = t.questions.length * MAX_SCORE_PER_Q;
+      const scored = Object.values(rec.scores||{}).reduce((a,b)=>a+(+b||0),0);
+      const pct = rec.evaluated ? Math.round((scored/maxScore)*100) : null;
+      const timeStr = `${Math.floor(rec.timeTaken/60)}m ${rec.timeTaken%60}s`;
+
+      bodyHTML = `
+        ${rec.evaluated ? `
+          <div style="display:flex;align-items:flex-end;gap:12px">
+            <div>
+              <div class="cd-test-score-big">${scored}<span style="font-size:16px;color:var(--text3)">/${maxScore}</span></div>
+              <div class="cd-test-score-pct">${pct}% · ${getGrade(pct).label}</div>
+            </div>
+          </div>
+          <div class="cd-test-bar"><div class="cd-test-bar-fill" style="width:${pct}%"></div></div>
+        ` : ''}
+        <div class="cd-test-row"><span class="cd-test-row-lbl">Submitted</span><span class="cd-test-row-val">${fmtDate(rec.submittedAt)}</span></div>
+        <div class="cd-test-row"><span class="cd-test-row-lbl">Time Taken</span><span class="cd-test-row-val">${timeStr}${rec.autoSubmit?' (auto)':''}</span></div>
+        <div class="cd-test-row"><span class="cd-test-row-lbl">Violations</span><span class="cd-test-row-val" style="color:${rec.tabSwitches>0?'var(--red)':'var(--green)'}">${rec.tabSwitches>0?rec.tabSwitches+' detected':'None'}</span></div>
+      `;
+    }
+
+    // Actions
+    let actionsHTML='';
+    if (rec) {
+      actionsHTML += `<button class="cd-action-btn cd-action-primary" data-action="evaluate" data-rid="${rec.id}">${rec.evaluated?'📊 View / Edit':'✏️ Evaluate'}</button>`;
+      actionsHTML += `<button class="cd-action-btn cd-action-danger" data-action="reset" data-email="${escHtml(email)}" data-tid="${t.id}">↻ Reset Test</button>`;
+    } else if (hasGrant) {
+      actionsHTML += `<button class="cd-action-btn cd-action-warn" data-action="revoke-reattempt" data-email="${escHtml(email)}" data-tid="${t.id}">✓ Reattempt Active — Revoke</button>`;
+    } else {
+      actionsHTML += `<button class="cd-action-btn cd-action-secondary" disabled style="opacity:.5;cursor:not-allowed">— Awaiting Submission —</button>`;
+    }
+
+    return `<div class="cd-test-card ${statusClass}">
+      <div class="cd-test-head">
+        <div class="cd-test-left">
+          <div class="cd-test-num ${t.color}">T${t.id}</div>
+          <div><div class="cd-test-title">${escHtml(t.title)}</div><div class="cd-test-qcount">${t.questions.length} questions · ${t.duration} min</div></div>
+        </div>
+        <span class="cd-test-status ${statusTag}">${statusText}${hasGrant?' · Reattempt':''}</span>
+      </div>
+      <div class="cd-test-body">${bodyHTML}</div>
+      <div class="cd-test-actions">${actionsHTML}</div>
+    </div>`;
+  }).join('');
+
+  $('screen-admin').innerHTML = `
+    <div class="cd-topbar">
+      <button class="btn-exit" id="cd-back" style="background:transparent;border-color:var(--border2);color:var(--text)">← All Candidates</button>
+      <div style="font-weight:600;font-size:15px;flex:1">Candidate Profile</div>
+    </div>
+    <div class="cd-body">
+      <div class="cd-header-card">
+        <div class="cd-avatar-lg">${initials(user.name)}</div>
+        <div class="cd-head-info">
+          <div class="cd-candidate-name">${escHtml(user.name)}</div>
+          <div class="cd-candidate-meta">
+            <span>📧 ${escHtml(user.email)}</span>
+            <span>📱 ${escHtml(user.phone||'—')}</span>
+            <span>📅 Joined ${fmtDate(user.createdAt)}</span>
+          </div>
+        </div>
+        <div class="cd-head-stats">
+          <div class="cd-stat-box"><div class="cd-stat-val">${submittedCount}<span style="font-size:14px;color:rgba(255,255,255,.4)">/4</span></div><div class="cd-stat-lbl">Submitted</div></div>
+          <div class="cd-stat-box"><div class="cd-stat-val">${evaluatedCount}<span style="font-size:14px;color:rgba(255,255,255,.4)">/4</span></div><div class="cd-stat-lbl">Evaluated</div></div>
+          ${canGenerateReport?`<div class="cd-stat-box"><div class="cd-stat-val">${overallPct}%</div><div class="cd-stat-lbl">Overall</div></div>`:''}
+        </div>
+        <div class="cd-actions">
+          ${canGenerateReport?`<button class="cd-btn cd-btn-primary" id="cd-report-btn">📊 Generate Report</button>`:''}
+        </div>
+      </div>
+      <div class="section-title">All Tests</div>
+      <div class="cd-tests-grid">${testCardsHTML}</div>
+    </div>
+  `;
+
+  $('cd-back').onclick = () => { S.adminActiveTab='candidates'; renderAdmin(); };
+  if (canGenerateReport) $('cd-report-btn').onclick = () => renderCandidateReport(email);
+
+  // Wire up per-test actions
+  document.querySelectorAll('.cd-action-btn').forEach(btn => {
+    const action = btn.dataset.action;
+    if (action === 'evaluate') {
+      btn.onclick = () => renderEvalDetail(+btn.dataset.rid);
+    } else if (action === 'reset') {
+      btn.onclick = () => confirmResetTest(btn.dataset.email, +btn.dataset.tid);
+    } else if (action === 'grant-reattempt') {
+      btn.onclick = () => grantReattempt(btn.dataset.email, +btn.dataset.tid);
+    } else if (action === 'revoke-reattempt') {
+      btn.onclick = () => revokeReattempt(btn.dataset.email, +btn.dataset.tid);
+    }
+  });
+}
+
+// ═══════════════════════════════════════════════
+// RESET TEST — wipes submission + evaluation
+// so candidate can take the test fresh again.
+// ═══════════════════════════════════════════════
+function confirmResetTest(email, testId){
+  email = String(email||'').toLowerCase().trim();
+  const t = TESTS.find(x => x.id === testId);
+  const user = getUsers().find(u => String(u.email||'').toLowerCase() === email);
+  const sub  = getResponses().find(r => String(r.email||'').toLowerCase() === email && r.testId === testId);
+  const displayName = (user && user.name) || (sub && sub.name) || email;
+  showModal(
+    `Reset Test ${testId}?`,
+    `This will permanently delete ${displayName}'s submission and evaluation for "${t.title}". They will be able to take the test again fresh. This cannot be undone.`,
+    () => doResetTest(email, testId),
+    { confirmText: 'Yes, reset test', cancelText: 'Cancel', danger: true }
+  );
+}
+
+async function doResetTest(email, testId){
+  email = String(email||'').toLowerCase().trim();
+  loading(true, 'Resetting test…');
+  try {
+    // 1. Remove locally
+    const filtered = getResponses().filter(r =>
+      !(String(r.email||'').toLowerCase() === email && r.testId === testId)
+    );
+    saveResponses(filtered);
+
+    // 2. Clear any reattempt grant (not needed after reset)
+    const grants = reattemptGrants || getReattemptGrants();
+    if (grants[email + ':' + testId]) {
+      delete grants[email + ':' + testId];
+      saveReattemptGrants(grants);
+      reattemptGrants = grants;
+    }
+
+    // 3. Tell backend to delete from sheet
+    if (GOOGLE_SCRIPT_URL !== 'YOUR_GOOGLE_APPS_SCRIPT_URL_HERE') {
+      await fetch(GOOGLE_SCRIPT_URL, {
+        method: 'POST',
+        body: JSON.stringify({ type: 'reset_test', email, testId })
+      });
+    }
+  } catch(e) {
+    console.warn('Reset had issues:', e);
+  }
+  loading(false);
+  // Refresh candidate detail view
+  renderCandidateDetailView(email);
+}
+
+async function grantReattempt(email, testId){
+  loading(true, 'Granting reattempt…');
+  const g = reattemptGrants || getReattemptGrants();
+  g[email+':'+testId] = true;
+  saveReattemptGrants(g); reattemptGrants = g;
+  if (GOOGLE_SCRIPT_URL !== 'YOUR_GOOGLE_APPS_SCRIPT_URL_HERE') {
+    try { await fetch(GOOGLE_SCRIPT_URL, { method:'POST', body: JSON.stringify({ type:'reattempt', email, testId }) }); } catch(e){}
+  }
+  loading(false);
+  renderCandidateDetailView(email);
+}
+
+async function revokeReattempt(email, testId){
+  loading(true, 'Revoking reattempt…');
+  const g = reattemptGrants || getReattemptGrants();
+  delete g[email+':'+testId];
+  saveReattemptGrants(g); reattemptGrants = g;
+  if (GOOGLE_SCRIPT_URL !== 'YOUR_GOOGLE_APPS_SCRIPT_URL_HERE') {
+    try { await fetch(GOOGLE_SCRIPT_URL, { method:'POST', body: JSON.stringify({ type:'revoke_reattempt', email, testId }) }); } catch(e){}
+  }
+  loading(false);
+  renderCandidateDetailView(email);
 }
 
 // ═══════════════════════════════════════════════
@@ -879,7 +1625,7 @@ function renderCandidatesTab(){
 // ═══════════════════════════════════════════════
 function renderEvalDetail(rid){
   const all=getResponses(), r=all.find(x=>x.id===rid);
-  if(!r) return;
+  if(!r) { alert('Submission not found. Try syncing the sheet.'); return; }
   const t=TESTS.find(x=>x.id===r.testId);
   const maxScore=t.questions.length*MAX_SCORE_PER_Q;
   const s=$('screen-admin');
@@ -889,21 +1635,23 @@ function renderEvalDetail(rid){
 
   s.innerHTML=`
     <div class="detail-topbar">
-      <button class="btn-exit" id="btn-back-list" style="background:transparent;border-color:var(--border2);color:var(--text)">← All Submissions</button>
-      <div style="font-weight:600;font-size:15px;flex:1">${r.name} — ${r.testTitle}</div>
+      <button class="btn-exit" id="btn-back-list" style="background:transparent;border-color:var(--border2);color:var(--text)">← Back</button>
+      <div style="flex:1;min-width:0">
+        <div style="font-weight:600;font-size:15px;line-height:1.2">${escHtml(r.name)} — ${escHtml(r.testTitle)}</div>
+        <div style="font-size:12px;color:var(--text3);margin-top:2px">${fmtDate(r.submittedAt)}</div>
+      </div>
       <span class="tag ${r.tabSwitches>0?'tag-flag':'tag-clean'}">${r.tabSwitches>0?r.tabSwitches+' violation(s)':'Clean'}</span>
     </div>
     <div class="detail-body">
       <div class="detail-meta-card">
-        <div><div class="dm-item-lbl">Submitted</div><div class="dm-item-val">${r.submittedAt}</div></div>
+        <div><div class="dm-item-lbl">Submitted</div><div class="dm-item-val">${fmtDate(r.submittedAt)}</div></div>
         <div><div class="dm-item-lbl">Time Taken</div><div class="dm-item-val">${Math.round(r.timeTaken/60)}m ${r.timeTaken%60}s${r.autoSubmit?' (auto)':''}</div></div>
-        <div><div class="dm-item-lbl">Email</div><div class="dm-item-val">${r.email}</div></div>
-        <div><div class="dm-item-lbl">Phone</div><div class="dm-item-val">${r.phone||'—'}</div></div>
+        <div><div class="dm-item-lbl">Email</div><div class="dm-item-val">${escHtml(r.email)}</div></div>
+        <div><div class="dm-item-lbl">Phone</div><div class="dm-item-val">${escHtml(r.phone||'—')}</div></div>
         <div><div class="dm-item-lbl">Violations</div><div class="dm-item-val" style="color:${r.tabSwitches>0?'var(--red)':'var(--green)'}">${r.tabSwitches>0?r.tabSwitches+' detected':'None'}</div></div>
         <div><div class="dm-item-lbl">Status</div><div class="dm-item-val" style="color:${r.evaluated?'var(--green)':'var(--accent)'}">${r.evaluated?`Evaluated — ${pct}%`:'Pending evaluation'}</div></div>
       </div>
 
-      <!-- Score summary bar -->
       <div class="eval-summary-bar">
         <div>
           <div class="eval-sum-title">Evaluation Score</div>
@@ -915,12 +1663,11 @@ function renderEvalDetail(rid){
         </div>
         <div class="eval-overall-wrap">
           <div class="eval-overall-label">Overall Comment for this test</div>
-          <textarea class="eval-overall-input" id="overall-comment" rows="3" placeholder="Write an overall remark for this test submission...">${r.overallComment||''}</textarea>
+          <textarea class="eval-overall-input" id="overall-comment" rows="3" placeholder="Write an overall remark for this test submission...">${escHtml(r.overallComment||'')}</textarea>
         </div>
         <button class="btn-save-eval" id="btn-save-eval">💾 Save Evaluation</button>
       </div>
 
-      <!-- Per-question evaluation blocks -->
       ${t.questions.map((q,i)=>{
         const qScore=r.scores&&r.scores[q.id]!==undefined?r.scores[q.id]:'';
         const qComment=r.comments&&r.comments[q.id]?r.comments[q.id]:'';
@@ -933,9 +1680,9 @@ function renderEvalDetail(rid){
               ${qScore!==''?qScore+'/'+MAX_SCORE_PER_Q:'—/'+MAX_SCORE_PER_Q}
             </div>
           </div>
-          <div class="qa-question">${q.text}</div>
+          <div class="qa-question">${escHtml(q.text)}</div>
           <div class="qa-ans-lbl">Candidate's Answer</div>
-          <div class="qa-answer">${hasAns?r.answers[q.id]:'<span class="qa-empty">Not answered</span>'}</div>
+          <div class="qa-answer">${hasAns?escHtml(r.answers[q.id]):'<span class="qa-empty">Not answered</span>'}</div>
           <div class="eval-row">
             <div class="eval-score-wrap">
               <div class="eval-score-label">Score (out of ${MAX_SCORE_PER_Q})</div>
@@ -949,7 +1696,7 @@ function renderEvalDetail(rid){
             </div>
             <div class="eval-comment-wrap">
               <div class="eval-comment-label">Evaluator Comment</div>
-              <textarea class="comment-input" id="comment-${q.id}" placeholder="Feedback, correction, or note for this question...">${qComment}</textarea>
+              <textarea class="comment-input" id="comment-${q.id}" placeholder="Feedback, correction, or note for this question...">${escHtml(qComment)}</textarea>
             </div>
           </div>
         </div>`;
@@ -958,9 +1705,11 @@ function renderEvalDetail(rid){
       <button class="btn-save-eval" id="btn-save-eval-bottom" style="margin-top:4px;width:100%;padding:13px;font-size:15px">💾 Save Evaluation</button>
     </div>`;
 
-  $('btn-back-list').onclick=()=>renderAdmin();
+  $('btn-back-list').onclick=()=>{
+    // Go back to candidate detail if we came from there, else admin
+    renderCandidateDetailView(r.email);
+  };
 
-  // ── Star click → fill score input ──
   s.querySelectorAll('.star').forEach(star=>{
     star.onclick=()=>{
       const qid=star.dataset.qid, n=+star.dataset.n;
@@ -971,7 +1720,6 @@ function renderEvalDetail(rid){
     };
   });
 
-  // ── Score input → update stars and live total ──
   s.querySelectorAll('.score-input').forEach(inp=>{
     inp.oninput=()=>{
       const qid=inp.dataset.qid;
@@ -999,7 +1747,6 @@ function renderEvalDetail(rid){
     $('live-score-display').textContent=`${total} / ${mx}`;
     $('live-pct-display').textContent=`${p}%`;
     $('live-score-bar').style.width=`${p}%`;
-    // update score badges
     t2.questions.forEach(q=>{ const inp=$(`score-${q.id}`); const badge=$(`badge-${q.id}`); if(!inp||!badge) return; const v=inp.value; badge.textContent=v!==''?v+'/'+MAX_SCORE_PER_Q:'—/'+MAX_SCORE_PER_Q; badge.classList.toggle('scored',v!==''); });
   }
 
@@ -1016,6 +1763,7 @@ function renderEvalDetail(rid){
     allR[idx].overallComment=$('overall-comment').value||'';
     allR[idx].evaluated=true;
     saveResponses(allR);
+    sendEvalToSheets(allR[idx], t2);
     $('btn-save-eval').textContent='✓ Saved!';
     $('btn-save-eval-bottom').textContent='✓ Saved!';
     setTimeout(()=>{ $('btn-save-eval').textContent='💾 Save Evaluation'; $('btn-save-eval-bottom').textContent='💾 Save Evaluation'; },2000);
@@ -1029,11 +1777,22 @@ function renderEvalDetail(rid){
 // CANDIDATE FULL REPORT
 // ═══════════════════════════════════════════════
 function renderCandidateReport(email){
-  const user=getUsers().find(u=>u.email===email);
-  const responses=getResponses().filter(r=>r.email===email&&r.evaluated);
-  if(!user||!responses.length){alert('No evaluated submissions found for this candidate.');return;}
+  email = String(email||'').toLowerCase().trim();
+  let user = getUsers().find(u => String(u.email||'').toLowerCase() === email);
+  const responses = getResponses().filter(r =>
+    String(r.email||'').toLowerCase() === email && r.evaluated
+  );
+  if (!responses.length) { alert('No evaluated submissions found for this candidate.'); return; }
+  if (!user) {
+    const r = responses[0];
+    user = {
+      name: r.name || email,
+      email,
+      phone: r.phone || '',
+      createdAt: r.submittedAt || '—',
+    };
+  }
 
-  // Compute totals per test
   const testData=TESTS.map(t=>{
     const rec=responses.find(r=>r.testId===t.id);
     if(!rec) return {t,rec:null,scored:null,max:null,pct:null};
@@ -1048,7 +1807,6 @@ function renderCandidateReport(email){
   const overallPct=Math.round((totalScored/totalMax)*100);
   const grade=getGrade(overallPct);
 
-  // Top 3 strongest and weakest questions across all tests
   let allQScores=[];
   testData.forEach(({t,rec})=>{
     if(!rec) return;
@@ -1061,21 +1819,34 @@ function renderCandidateReport(email){
   const top3=allQScores.slice(0,3);
   const bot3=allQScores.slice(-3).reverse();
 
+  const reportGenTime = new Date().toLocaleString('en-IN');
   const s=$('screen-admin');
+  const reportBodyHTML = buildReportHTML(user, testData, totalScored, totalMax, overallPct, grade, top3, bot3, reportGenTime);
+
   s.innerHTML=`
     <div class="detail-topbar">
-      <button class="btn-exit" id="btn-back-list" style="background:transparent;border-color:var(--border2);color:var(--text)">← All Candidates</button>
-      <div style="font-weight:600;font-size:15px;flex:1">Candidate Report — ${user.name}</div>
-      <button class="btn-print-report" onclick="window.print()">🖨 Print / Save PDF</button>
+      <button class="btn-exit" id="btn-back-list" style="background:transparent;border-color:var(--border2);color:var(--text)">← Back</button>
+      <div style="font-weight:600;font-size:15px;flex:1">Candidate Report — ${escHtml(user.name)}</div>
+      <div style="display:flex;gap:8px">
+        <button class="btn-print-report" id="btn-download-report">⬇ Download HTML</button>
+        <button class="btn-print-report" onclick="window.print()">🖨 Print / PDF</button>
+      </div>
     </div>
     <div class="report-wrap" id="report-content">
+      ${reportBodyHTML}
+    </div>`;
 
-      <!-- HEADER -->
+  $('btn-back-list').onclick=()=>renderCandidateDetailView(email);
+  $('btn-download-report').onclick=()=>downloadReport(user, reportBodyHTML, reportGenTime, testData, totalScored, totalMax, overallPct, grade);
+}
+
+function buildReportHTML(user, testData, totalScored, totalMax, overallPct, grade, top3, bot3, reportGenTime){
+  return `
       <div class="report-header">
         <div>
-          <div class="report-candidate-name">${user.name}</div>
-          <div class="report-candidate-meta">${user.email} &nbsp;·&nbsp; ${user.phone||'—'} &nbsp;·&nbsp; Joined ${user.createdAt}</div>
-          <div style="margin-top:10px;font-size:12px;color:rgba(255,255,255,.5)">Report generated: ${new Date().toLocaleString('en-IN')}</div>
+          <div class="report-candidate-name">${escHtml(user.name)}</div>
+          <div class="report-candidate-meta">${escHtml(user.email)} &nbsp;·&nbsp; ${escHtml(user.phone||'—')} &nbsp;·&nbsp; Joined ${escHtml(user.createdAt)}</div>
+          <div style="margin-top:10px;font-size:12px;color:rgba(255,255,255,.5)">Report generated: ${reportGenTime}</div>
         </div>
         <div class="report-overall-score">
           <div class="report-overall-num">${overallPct}%</div>
@@ -1085,42 +1856,39 @@ function renderCandidateReport(email){
         </div>
       </div>
 
-      <!-- PER-TEST CARDS -->
       <div class="report-tests-grid">
         ${testData.map(({t,rec,scored,max,pct})=>{
-          if(!rec) return `<div class="report-test-card"><div class="rtc-header"><div><div class="tc-num ${t.color}" style="width:32px;height:32px;font-size:12px;display:inline-flex;margin-bottom:6px">T${t.id}</div><div class="rtc-title">${t.title}</div></div></div><div class="rtc-not-evaluated">Not submitted</div></div>`;
+          if(!rec) return `<div class="report-test-card"><div class="rtc-header"><div><div class="tc-num ${t.color}" style="width:32px;height:32px;font-size:12px;display:inline-flex;margin-bottom:6px">T${t.id}</div><div class="rtc-title">${escHtml(t.title)}</div></div></div><div class="rtc-not-evaluated">Not submitted / Not evaluated</div></div>`;
           const g=getGrade(pct);
           return `<div class="report-test-card">
             <div class="rtc-header">
-              <div><div class="tc-num ${t.color}" style="width:32px;height:32px;font-size:12px;display:inline-flex;margin-bottom:6px">T${t.id}</div><div class="rtc-title">${t.title}</div></div>
+              <div><div class="tc-num ${t.color}" style="width:32px;height:32px;font-size:12px;display:inline-flex;margin-bottom:6px">T${t.id}</div><div class="rtc-title">${escHtml(t.title)}</div></div>
               <div style="text-align:right"><div class="rtc-score">${pct}%</div><div class="rtc-score-lbl">${scored}/${max}</div><div class="report-grade-badge ${g.cls}" style="font-size:10px;padding:2px 10px;margin-top:4px">${g.label}</div></div>
             </div>
             <div class="rtc-bar-bg"><div class="rtc-bar-fill" style="width:${pct}%"></div></div>
-            ${rec.overallComment?`<div class="rtc-comment">"${rec.overallComment}"</div>`:''}
+            ${rec.overallComment?`<div class="rtc-comment">"${escHtml(rec.overallComment)}"</div>`:''}
           </div>`;
         }).join('')}
       </div>
 
-      <!-- STRENGTHS / WEAKNESSES -->
       <div class="report-strengths-wrap">
         <div class="report-str-card">
           <div class="rsc-title strength">💪 Top Performing Questions</div>
-          ${top3.map(q=>`<div class="rsc-q-row"><span style="flex:1">${q.label}: ${q.text}</span><span class="rsc-q-score score-hi">${q.score}/${MAX_SCORE_PER_Q}</span></div>`).join('')}
+          ${top3.map(q=>`<div class="rsc-q-row"><span style="flex:1">${q.label}: ${escHtml(q.text)}</span><span class="rsc-q-score score-hi">${q.score}/${MAX_SCORE_PER_Q}</span></div>`).join('')}
         </div>
         <div class="report-str-card">
           <div class="rsc-title weakness">📌 Areas to Improve</div>
-          ${bot3.map(q=>`<div class="rsc-q-row"><span style="flex:1">${q.label}: ${q.text}</span><span class="rsc-q-score score-lo">${q.score}/${MAX_SCORE_PER_Q}</span></div>`).join('')}
+          ${bot3.map(q=>`<div class="rsc-q-row"><span style="flex:1">${q.label}: ${escHtml(q.text)}</span><span class="rsc-q-score score-lo">${q.score}/${MAX_SCORE_PER_Q}</span></div>`).join('')}
         </div>
       </div>
 
-      <!-- DETAILED QUESTION-LEVEL SCORES -->
       <div class="report-questions-section">
         <div class="section-title" style="margin-bottom:12px">Question-wise Scores</div>
         ${testData.map(({t,rec,scored,max,pct})=>{
           if(!rec) return '';
           return `<div class="rqs-test-block">
             <div class="rqs-test-header">
-              <div class="rqs-test-title">Test ${t.id}: ${t.title}</div>
+              <div class="rqs-test-title">Test ${t.id}: ${escHtml(t.title)}</div>
               <div class="rqs-test-score">${scored}/${max} — ${pct}%</div>
             </div>
             ${t.questions.map((q,i)=>{
@@ -1128,31 +1896,139 @@ function renderCandidateReport(email){
               const cm=rec.comments&&rec.comments[q.id]?rec.comments[q.id]:'';
               const pctQ=sc!==null?Math.round((sc/MAX_SCORE_PER_Q)*100):null;
               return `<div class="rqs-q-row">
-                <div><div class="rqs-q-text">Q${i+1}: ${q.text}</div>${cm?`<div class="rqs-q-comment">💬 ${cm}</div>`:''}</div>
-                <div style="font-size:11px;color:var(--text3);text-align:center">${pctQ!==null?`<div class="score-bar-wrap" style="width:60px;margin:0 auto 4px"><div class="score-bar-bg"><div class="score-bar-fill" style="width:${pctQ}%"></div></div></div>`:''}${pctQ!==null?pctQ+'%':'—'}</div>
+                <div><div class="rqs-q-text">Q${i+1}: ${escHtml(q.text)}</div>${cm?`<div class="rqs-q-comment">💬 ${escHtml(cm)}</div>`:''}</div>
+                <div style="font-size:11px;color:#999;text-align:center">${pctQ!==null?pctQ+'%':'—'}</div>
                 <div class="rqs-q-score ${sc!==null?(sc>=7?'score-hi':sc>=4?'':'score-lo'):''}">
-                  ${sc!==null?`${sc}<span style="font-size:10px;font-weight:400;color:var(--text3)">/${MAX_SCORE_PER_Q}</span>`:'<span style="font-size:11px;color:var(--text3)">N/A</span>'}
+                  ${sc!==null?`${sc}<span style="font-size:10px;font-weight:400;color:#999">/${MAX_SCORE_PER_Q}</span>`:'<span style="font-size:11px;color:#999">N/A</span>'}
                 </div>
               </div>`;
             }).join('')}
           </div>`;
         }).join('')}
-      </div>
+      </div>`;
+}
 
-    </div>`;
+function downloadReport(user, reportBodyHTML, reportGenTime, testData, totalScored, totalMax, overallPct, grade){
+  const safeName = user.name.replace(/\s+/g,'_');
+  const fileName = `${safeName}_BDM_Report.html`;
 
-  $('btn-back-list').onclick=()=>{renderAdmin(); $('tab-candidates').click();};
+  const fullHTML = `<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>BDM Report — ${escHtml(user.name)}</title>
+<link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display:ital@0;1&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:'DM Sans',sans-serif;background:#F7F5F0;color:#1A1A1A;font-size:14px;line-height:1.6;padding:0}
+.report-wrap{padding:2rem;max-width:900px;margin:0 auto}
+.download-bar{background:#1A3A2A;padding:.75rem 2rem;display:flex;align-items:center;justify-content:space-between;gap:1rem}
+.download-bar-title{font-family:'DM Serif Display',serif;font-size:18px;color:#F5C842}
+.download-bar-sub{font-size:12px;color:rgba(255,255,255,.5);margin-top:2px}
+.btn-pdf{background:#E8A020;color:#1A3A2A;border:none;border-radius:8px;padding:8px 20px;font-size:13px;font-weight:600;cursor:pointer;font-family:'DM Sans',sans-serif}
+.btn-pdf:hover{background:#F5C842}
+.report-header{background:#1A3A2A;border-radius:12px;padding:2rem;margin-bottom:1.5rem;display:flex;align-items:center;justify-content:space-between;gap:1rem;flex-wrap:wrap}
+.report-candidate-name{font-family:'DM Serif Display',serif;font-size:28px;color:#fff}
+.report-candidate-meta{font-size:13px;color:rgba(255,255,255,.6);margin-top:4px}
+.report-overall-score{text-align:right}
+.report-overall-num{font-family:'DM Serif Display',serif;font-size:48px;color:#F5C842;line-height:1}
+.report-overall-lbl{font-size:12px;color:rgba(255,255,255,.5);text-transform:uppercase;letter-spacing:.06em;margin-top:4px}
+.report-grade-badge{display:inline-block;padding:4px 16px;border-radius:50px;font-size:13px;font-weight:700;letter-spacing:.04em;margin-top:8px}
+.grade-a{background:rgba(26,107,58,.3);color:#7FE89A}
+.grade-b{background:rgba(45,106,79,.3);color:#5FC4A0}
+.grade-c{background:rgba(232,160,32,.3);color:#F5C842}
+.grade-d{background:rgba(192,57,43,.3);color:#F1948A}
+.report-tests-grid{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-bottom:1.5rem}
+.report-test-card{background:#fff;border:1px solid rgba(26,58,42,.12);border-radius:12px;padding:1.25rem}
+.rtc-header{display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:12px}
+.rtc-title{font-size:13px;font-weight:600;color:#1A1A1A}
+.rtc-score{font-family:'DM Serif Display',serif;font-size:26px;color:#2D6A4F}
+.rtc-score-lbl{font-size:11px;color:#999}
+.rtc-bar-bg{height:8px;background:#F0EDE6;border-radius:4px;overflow:hidden;margin-bottom:10px}
+.rtc-bar-fill{height:100%;border-radius:4px;background:linear-gradient(90deg,#2D6A4F,#E8A020)}
+.rtc-comment{font-size:12px;color:#555;line-height:1.6;font-style:italic;border-left:3px solid rgba(26,58,42,.2);padding-left:10px;margin-top:8px}
+.rtc-not-evaluated{font-size:12px;color:#999;font-style:italic}
+.tc-num{width:32px;height:32px;border-radius:50%;display:inline-flex;align-items:center;justify-content:center;font-weight:600;font-size:12px;margin-bottom:6px}
+.t1{background:#E8F4FD;color:#1A5A8A}.t2{background:#FFF3E0;color:#8A4A1A}
+.t3{background:#E8F5E9;color:#1A5A2A}.t4{background:#FCE4EC;color:#8A1A3A}
+.report-strengths-wrap{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-bottom:1.5rem}
+.report-str-card{background:#fff;border:1px solid rgba(26,58,42,.12);border-radius:12px;padding:1.25rem}
+.rsc-title{font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:.06em;margin-bottom:10px}
+.rsc-title.strength{color:#1A6B3A}.rsc-title.weakness{color:#C0392B}
+.rsc-q-row{font-size:12px;color:#555;padding:5px 0;border-bottom:1px solid rgba(26,58,42,.08);display:flex;justify-content:space-between;gap:8px;align-items:center}
+.rsc-q-row:last-child{border-bottom:none}
+.rsc-q-score{font-weight:600;font-size:13px;flex-shrink:0}
+.score-hi{color:#1A6B3A}.score-lo{color:#C0392B}
+.report-questions-section{margin-top:1.5rem}
+.section-title{font-size:13px;font-weight:600;color:#999;text-transform:uppercase;letter-spacing:.08em;margin-bottom:12px}
+.rqs-test-block{background:#fff;border:1px solid rgba(26,58,42,.12);border-radius:12px;margin-bottom:14px;overflow:hidden}
+.rqs-test-header{background:#1A3A2A;padding:.8rem 1.25rem;display:flex;justify-content:space-between;align-items:center}
+.rqs-test-title{font-size:13px;font-weight:600;color:#fff}
+.rqs-test-score{font-size:13px;color:#F5C842;font-weight:600}
+.rqs-q-row{padding:.8rem 1.25rem;border-bottom:1px solid rgba(26,58,42,.08);display:grid;grid-template-columns:1fr 60px 60px;gap:10px;align-items:start}
+.rqs-q-row:last-child{border-bottom:none}
+.rqs-q-text{font-size:12px;color:#555;line-height:1.5}
+.rqs-q-comment{font-size:11px;color:#999;font-style:italic;margin-top:3px}
+.rqs-q-score{font-size:14px;font-weight:700;text-align:center}
+.score-summary-table{width:100%;border-collapse:collapse;background:#fff;border-radius:12px;overflow:hidden;margin-bottom:1.5rem;border:1px solid rgba(26,58,42,.12)}
+.score-summary-table th{background:#1A3A2A;color:#fff;padding:10px 16px;font-size:12px;text-align:left;font-weight:600;letter-spacing:.04em}
+.score-summary-table td{padding:10px 16px;font-size:13px;border-bottom:1px solid rgba(26,58,42,.08)}
+.score-summary-table tr:last-child td{border-bottom:none;font-weight:600;background:#F7F5F0}
+.score-summary-table tr:last-child td:first-child{color:#1A3A2A}
+@media print{.download-bar{display:none!important}body{background:#fff;padding:0}.report-wrap{padding:1rem}.rqs-test-block{page-break-inside:avoid}}
+@media(max-width:600px){.report-tests-grid,.report-strengths-wrap{grid-template-columns:1fr}.rqs-q-row{grid-template-columns:1fr 50px 50px}}
+</style>
+</head>
+<body>
+<div class="download-bar">
+  <div><div class="download-bar-title">Educart BDM — Candidate Report</div><div class="download-bar-sub">Open this file in any browser · Print to save as PDF</div></div>
+  <button class="btn-pdf" onclick="window.print()">🖨 Print / Save as PDF</button>
+</div>
+<div class="report-wrap">
+  <table class="score-summary-table" style="margin-top:1.5rem">
+    <thead><tr><th>Test</th><th>Score</th><th>Marks</th><th>Grade</th></tr></thead>
+    <tbody>
+      ${testData.map(({t,rec,scored,max,pct})=>{
+        if(!rec) return `<tr><td>Test ${t.id}: ${escHtml(t.title)}</td><td>—</td><td>—</td><td style="color:#999">Not evaluated</td></tr>`;
+        const g=getGrade(pct);
+        return `<tr><td>Test ${t.id}: ${escHtml(t.title)}</td><td>${pct}%</td><td>${scored}/${max}</td><td>${g.label}</td></tr>`;
+      }).join('')}
+      <tr><td>Overall Total</td><td>${overallPct}%</td><td>${totalScored}/${totalMax}</td><td>${grade.label}</td></tr>
+    </tbody>
+  </table>
+  ${reportBodyHTML}
+</div>
+</body>
+</html>`;
+
+  const blob = new Blob([fullHTML], { type: 'text/html;charset=utf-8' });
+  const url  = URL.createObjectURL(blob);
+  const a    = document.createElement('a');
+  a.href     = url; a.download = fileName;
+  document.body.appendChild(a); a.click();
+  document.body.removeChild(a); URL.revokeObjectURL(url);
 }
 
 // ═══════════════════════════════════════════════
 // INIT
 // ═══════════════════════════════════════════════
-(function init(){
-  const sess=getSession();
-  if(sess){
-    const user=getUsers().find(u=>u.email===sess.email&&u.pass===sess.pass);
-    if(user){S.user=user;renderDashboard();showScreen('screen-dashboard');return;}
-    else clearSession();
+(async function init(){
+  reattemptGrants = getReattemptGrants();
+  await syncFromSheet();
+
+  const sess = getSession();
+  if (sess) {
+    let user = getUsers().find(u => u.email === sess.email && u.pass === sess.pass);
+    if (!user) {
+      clearSession();
+      showScreen('screen-login');
+      return;
+    }
+    S.user = user;
+    renderDashboard();
+    showScreen('screen-dashboard');
+    return;
   }
   showScreen('screen-login');
 })();
