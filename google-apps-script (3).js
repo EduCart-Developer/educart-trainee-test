@@ -1,80 +1,47 @@
 // =================================================================
-// EDUCART BDM ASSESSMENT -- Google Apps Script (v3)
-// Handles: registrations, logins, test submissions, admin reads
-// Passwords are stored in plain text in the Candidates sheet.
+// EDUCART BDM ASSESSMENT -- Google Apps Script Backend (v4)
 // =================================================================
+// Protocol (matches index.html frontend):
 //
-// SETUP INSTRUCTIONS:
-// 1. Go to https://script.google.com -> New Project
-// 2. Delete all existing code, paste this entire file
-// 3. Save (Ctrl+S)
-// 4. Deploy -> New Deployment -> Web App
-//      Execute as: Me
-//      Who has access: Anyone
-// 5. Deploy -> Authorize -> Copy the Web App URL
-// 6. Paste URL into index.html: const API = 'YOUR_URL_HERE';
+// POST body { type: ... }
+//   signup             -> add user to Candidates sheet
+//   submission         -> append row to Test N sheet (with answers Q1..Qn)
+//   evaluation         -> upsert eval row in Evaluations sheet
+//   reattempt          -> mark reattempt grant active
+//   revoke_reattempt   -> mark reattempt grant inactive
+//   reset_test         -> delete a candidate's submission row for one test
+//   delete_users       -> bulk-delete users + all their submissions/evals
 //
-// After editing this file always re-deploy with a New Version.
+// GET ?action=sync     -> { users, submissions (with answers), evaluations, reattempts }
+// GET ?action=ping     -> health check
+//
+// SETUP
+// 1. https://script.google.com -> New Project, paste this whole file, save.
+// 2. Deploy -> New Deployment -> Web App (Execute as: Me, Access: Anyone).
+// 3. Copy the /exec URL, paste into worker (1).js as GAS_URL, redeploy worker.
+// Re-deploy as NEW VERSION after every edit.
 // =================================================================
 
 var SHEET_NAME = 'Educart BDM Responses';
 
 var TAB = {
-  USERS: 'Candidates',
+  USERS:       'Candidates',
+  EVALS:       'Evaluations',
+  REATTEMPTS:  'Reattempts',
   T1: 'Test 1 - QB Readiness',
   T2: 'Test 2 - Scenarios',
   T3: 'Test 3 - Academic Structure',
   T4: 'Test 4 - NEP and Policy',
 };
 
-var Q_HEADERS = {
-  1: [
-    'Why is 2026-27 CBSE pattern different',
-    'What does 50 percent competency-based mean',
-    'Textbook vs Reference Book vs QB',
-    'Why called a Question Bank',
-    'Why traditional books fail in 2026-27',
-    'Response to NCERT is enough objection',
-    'NCERT vs RD Sharma vs Educart QB',
-    '1-minute pitch on Educart QB',
-    'Parameters to evaluate a good book',
-    'Problem QB solves for board prep',
-  ],
-  2: [
-    '5 questions for RD Sharma teacher',
-    'Reposition QB vs RD Sharma',
-    'Unique features and USPs of QB',
-    'How to review topper answers',
-    'Response to too many books objection',
-    'How to join specimen program',
-    'Response to price objection',
-    '5-minute HoD pitch',
-  ],
-  3: [
-    'Teachers and schools as real customers',
-    'NCERT vs CBSE difference',
-    'New 2026-27 exam pattern',
-    'Academic calendar of CBSE school',
-    'Best month to maximise sales',
-    'QB vs One-Shot difference',
-    'Why CBSE is core market',
-    'GTM strategies of Educart',
-    'Summer vacation rapport plan',
-    'Teacher recommendation and samples vs content',
-    'Teacher engagement initiatives',
-    'Last 4 months strategy',
-  ],
-  4: [
-    'Full form and year of NEP and NCF',
-    'Primary aim of NEP 2020',
-    '5+3+3+4 model explanation',
-    'NIPUN Bharat Mission',
-    'CPD Training and targets',
-    'Using NEP and NCF in school conversations',
-    'Policy to Classroom to Book to Sale chain',
-    'How NEP changes teacher role',
-    'How Educart books align with NEP',
-  ],
+// Question id list per testId — MUST match TESTS array order in index.html.
+// These are stored as the answer column header suffix and are how the frontend
+// re-maps answers back to questions during sync.
+var Q_IDS = {
+  1: ['1a','1b','1c','1d','1e','1f','1g','1h','1i','1j'],
+  2: ['2a','2b','2c','2d','2e','2f','2g','2h'],
+  3: ['3a','3b','3c','3d','3e','3f','3g','3h','3i','3j','3k','3l'],
+  4: ['4a','4b','4c','4d','4e','4f','4g','4h','4i'],
 };
 
 // =================================================================
@@ -83,15 +50,16 @@ var Q_HEADERS = {
 function doPost(e) {
   try {
     var data = JSON.parse(e.postData.contents);
-    var action = data.action || 'submit_test';
+    var type = data.type || data.action || '';
     var result;
-    if      (action === 'register')    { result = handleRegister(data); }
-    else if (action === 'login')       { result = handleLogin(data); }
-    else if (action === 'submit_test') { result = handleSubmitTest(data); }
-    else if (action === 'save_notes')      { result = handleSaveNotes(data); }
-    else if (action === 'forgot_password') { result = handleForgotPassword(data); }
-    else if (action === 'reset_password')  { result = handleResetPassword(data); }
-    else                                   { result = { status: 'error', message: 'Unknown action' }; }
+    if      (type === 'signup')           { result = handleSignup(data); }
+    else if (type === 'submission')       { result = handleSubmission(data); }
+    else if (type === 'evaluation')       { result = handleEvaluation(data); }
+    else if (type === 'reattempt')        { result = handleReattempt(data, 'active'); }
+    else if (type === 'revoke_reattempt') { result = handleReattempt(data, 'inactive'); }
+    else if (type === 'reset_test')       { result = handleResetTest(data); }
+    else if (type === 'delete_users')     { result = handleDeleteUsers(data); }
+    else                                  { result = { status: 'error', message: 'Unknown type: ' + type }; }
     return jsonResponse(result);
   } catch (err) {
     return jsonResponse({ status: 'error', message: err.toString() });
@@ -100,14 +68,11 @@ function doPost(e) {
 
 function doGet(e) {
   try {
-    var action = e.parameter.action || 'ping';
+    var action = (e && e.parameter && e.parameter.action) || 'ping';
     var result;
-    if      (action === 'ping')            { result = { status: 'ok', message: 'Educart BDM API running' }; }
-    else if (action === 'get_submissions') { result = handleGetSubmissions(); }
-    else if (action === 'get_candidates')  { result = handleGetCandidates(); }
-    else if (action === 'get_detail')      { result = handleGetDetail(e.parameter); }
-    else if (action === 'check_completed') { result = handleCheckCompleted(e.parameter); }
-    else                                   { result = { status: 'error', message: 'Unknown action' }; }
+    if      (action === 'ping') { result = { status: 'ok', message: 'Educart BDM API running' }; }
+    else if (action === 'sync') { result = handleSync(); }
+    else                        { result = { status: 'error', message: 'Unknown action: ' + action }; }
     return jsonResponse(result);
   } catch (err) {
     return jsonResponse({ status: 'error', message: err.toString() });
@@ -125,9 +90,7 @@ function jsonResponse(obj) {
 // =================================================================
 function getOrCreateSS() {
   var files = DriveApp.getFilesByName(SHEET_NAME);
-  if (files.hasNext()) {
-    return SpreadsheetApp.open(files.next());
-  }
+  if (files.hasNext()) return SpreadsheetApp.open(files.next());
   return SpreadsheetApp.create(SHEET_NAME);
 }
 
@@ -137,419 +100,358 @@ function getOrCreateTab(ss, tabName, headers) {
     sheet = ss.insertSheet(tabName);
     sheet.appendRow(headers);
     var hRange = sheet.getRange(1, 1, 1, headers.length);
-    hRange.setBackground('#1A3A2A');
-    hRange.setFontColor('#FFFFFF');
-    hRange.setFontWeight('bold');
+    hRange.setBackground('#1A3A2A').setFontColor('#FFFFFF').setFontWeight('bold');
     sheet.setFrozenRows(1);
     for (var i = 0; i < headers.length; i++) {
       sheet.setColumnWidth(i + 1, i < 8 ? 150 : 320);
+    }
+  } else {
+    // Ensure existing tab has all headers (add any missing ones at the end)
+    var lastCol = sheet.getLastColumn();
+    var existing = lastCol ? sheet.getRange(1, 1, 1, lastCol).getValues()[0] : [];
+    for (var j = 0; j < headers.length; j++) {
+      if (existing.indexOf(headers[j]) < 0) {
+        var newCol = sheet.getLastColumn() + 1;
+        sheet.getRange(1, newCol).setValue(headers[j])
+          .setBackground('#1A3A2A').setFontColor('#FFFFFF').setFontWeight('bold');
+      }
     }
   }
   return sheet;
 }
 
 function sheetToObjects(sheet) {
+  if (!sheet) return [];
   var data = sheet.getDataRange().getValues();
   if (data.length < 2) return [];
   var headers = data[0];
   var result = [];
   for (var i = 1; i < data.length; i++) {
     var obj = {};
-    for (var j = 0; j < headers.length; j++) {
-      obj[headers[j]] = data[i][j];
-    }
+    for (var j = 0; j < headers.length; j++) obj[headers[j]] = data[i][j];
     result.push(obj);
   }
   return result;
 }
 
-// Adds Password column if missing (fixes sheets created by older versions)
-function ensurePasswordColumn(sheet) {
-  var lastCol = sheet.getLastColumn();
-  if (lastCol === 0) return;
-  var headers = sheet.getRange(1, 1, 1, lastCol).getValues()[0];
-  var found = false;
-  for (var i = 0; i < headers.length; i++) {
-    if (headers[i] === 'Password') { found = true; break; }
+function findRowByMatch(sheet, predicate) {
+  if (!sheet) return -1;
+  var data = sheet.getDataRange().getValues();
+  if (data.length < 2) return -1;
+  var headers = data[0];
+  for (var i = 1; i < data.length; i++) {
+    var obj = {};
+    for (var j = 0; j < headers.length; j++) obj[headers[j]] = data[i][j];
+    if (predicate(obj)) return i + 1; // 1-based sheet row
   }
-  if (!found) {
-    var newCol = lastCol + 1;
-    sheet.getRange(1, newCol).setValue('Password');
-    sheet.getRange(1, newCol)
-      .setBackground('#1A3A2A')
-      .setFontColor('#FFFFFF')
-      .setFontWeight('bold');
-    sheet.setColumnWidth(newCol, 150);
-  }
+  return -1;
+}
+
+function questionHeaders(testId) {
+  var ids = Q_IDS[testId] || [];
+  return ids.map(function (qid, i) { return 'Q' + (i + 1) + ':' + qid; });
 }
 
 // =================================================================
-// REGISTER
-// Stores password in plain text -- visible in Candidates sheet
-// Columns: ID | Name | Email | Phone | Password | Registered At
+// SIGNUP
 // =================================================================
-function handleRegister(data) {
+function handleSignup(data) {
   var ss = getOrCreateSS();
-  var headers = ['ID', 'Name', 'Email', 'Phone', 'Password', 'Registered At'];
-  var sheet = getOrCreateTab(ss, TAB.USERS, headers);
+  var sheet = getOrCreateTab(ss, TAB.USERS, ['Name', 'Email', 'Phone', 'Created At']);
 
-  ensurePasswordColumn(sheet); // Safely adds Password column if old sheet lacks it
+  var email = String(data.email || '').toLowerCase().trim();
+  if (!email) return { status: 'error', message: 'Email required' };
 
-  var rows = sheetToObjects(sheet);
-  for (var i = 0; i < rows.length; i++) {
-    if (rows[i]['Email'] && rows[i]['Email'].toString().toLowerCase() === data.email.toLowerCase()) {
-      return { status: 'error', message: 'An account with this email already exists.' };
-    }
-  }
+  // Skip if a row with this email already exists
+  var existingRow = findRowByMatch(sheet, function (r) {
+    return String(r['Email'] || '').toLowerCase().trim() === email;
+  });
+  if (existingRow > 0) return { status: 'ok', message: 'Already registered' };
 
-  var id = Date.now().toString();
   sheet.appendRow([
-    id,
-    data.name,
-    data.email.toLowerCase(),
+    data.name || '',
+    email,
     data.phone || '',
-    data.pass,                           // Plain text password stored here
-    new Date().toLocaleString('en-IN'),
+    data.createdAt || new Date().toLocaleString('en-IN'),
   ]);
-
-  return {
-    status: 'ok',
-    user: { id: id, name: data.name, email: data.email.toLowerCase(), phone: data.phone || '' },
-  };
-}
-
-// =================================================================
-// LOGIN
-// =================================================================
-function handleLogin(data) {
-  var ss = getOrCreateSS();
-  var sheet = ss.getSheetByName(TAB.USERS);
-  if (!sheet) {
-    return { status: 'error', message: 'No accounts found. Please register first.' };
-  }
-
-  var rows = sheetToObjects(sheet);
-  var user = null;
-  for (var i = 0; i < rows.length; i++) {
-    var r = rows[i];
-    if (
-      r['Email'] && r['Email'].toString().toLowerCase() === data.email.toLowerCase() &&
-      r['Password'] && r['Password'].toString() === data.pass
-    ) {
-      user = r;
-      break;
-    }
-  }
-
-  if (!user) return { status: 'error', message: 'Incorrect email or password.' };
-
-  var completed = getCompletedTests(ss, data.email.toLowerCase());
-  return {
-    status: 'ok',
-    user: { id: user['ID'], name: user['Name'], email: user['Email'], phone: user['Phone'] || '' },
-    completed: completed,
-  };
-}
-
-// =================================================================
-// CHECK COMPLETED TESTS
-// =================================================================
-function handleCheckCompleted(params) {
-  var email = (params.email || '').toLowerCase();
-  if (!email) return { status: 'error', message: 'No email provided' };
-  var ss = getOrCreateSS();
-  return { status: 'ok', completed: getCompletedTests(ss, email) };
-}
-
-function getCompletedTests(ss, email) {
-  var completed = [];
-  var tids = [1, 2, 3, 4];
-  for (var t = 0; t < tids.length; t++) {
-    var tid = tids[t];
-    var ts = ss.getSheetByName(TAB['T' + tid]);
-    if (!ts) continue;
-    var rows = sheetToObjects(ts);
-    for (var i = 0; i < rows.length; i++) {
-      if (rows[i]['Email'] && rows[i]['Email'].toString().toLowerCase() === email) {
-        completed.push(tid);
-        break;
-      }
-    }
-  }
-  return completed;
+  return { status: 'ok' };
 }
 
 // =================================================================
 // SUBMIT TEST
 // =================================================================
-function handleSubmitTest(data) {
+function handleSubmission(data) {
   var testId = parseInt(data.testId);
+  if (!testId || !TAB['T' + testId]) return { status: 'error', message: 'Invalid testId' };
+
   var ss = getOrCreateSS();
-  var tabName = TAB['T' + testId];
+  var qHeaders = questionHeaders(testId);
+  var headers = ['Row ID', 'Submitted At', 'Name', 'Email', 'Phone', 'Test',
+                 'Time Taken (sec)', 'Auto Submit', 'Tab Switches'].concat(qHeaders);
 
-  var existing = ss.getSheetByName(tabName);
-  if (existing) {
-    var rows = sheetToObjects(existing);
-    for (var i = 0; i < rows.length; i++) {
-      if (rows[i]['Email'] && rows[i]['Email'].toString().toLowerCase() === data.email.toLowerCase()) {
-        return { status: 'error', message: 'This test has already been submitted.' };
-      }
-    }
-  }
+  var sheet = getOrCreateTab(ss, TAB['T' + testId], headers);
+  var email = String(data.email || '').toLowerCase().trim();
 
-  var qHeaders = Q_HEADERS[testId] || [];
-  var headers = ['Row ID', 'Submitted At', 'Name', 'Email', 'Phone', 'Test', 'Time Taken (sec)', 'Auto Submit', 'Tab Switches'];
-  for (var i = 0; i < qHeaders.length; i++) {
-    headers.push('Q' + (i + 1) + ': ' + qHeaders[i]);
-  }
-  headers.push('Notes');
-
-  var sheet = getOrCreateTab(ss, tabName, headers);
+  // De-dup: if this email already has a row in this test sheet, replace it
+  // (acts as upsert so a re-submission after a reset overwrites cleanly).
+  var existingRow = findRowByMatch(sheet, function (r) {
+    return String(r['Email'] || '').toLowerCase().trim() === email;
+  });
+  if (existingRow > 0) sheet.deleteRow(existingRow);
 
   var row = [
-    Date.now().toString(),
+    data.id || Date.now().toString(),
     data.submittedAt || new Date().toLocaleString('en-IN'),
     data.name || '',
-    data.email || '',
+    email,
     data.phone || '',
     data.testTitle || 'Test ' + testId,
     data.timeTaken || 0,
     data.autoSubmit ? 'Yes' : 'No',
     data.tabSwitches || 0,
   ];
-  for (var j = 0; j < qHeaders.length; j++) {
-    row.push(data['Q' + (j + 1)] || '');
+  for (var i = 0; i < qHeaders.length; i++) {
+    row.push(data['Q' + (i + 1)] || '');
   }
-  row.push('');
 
   sheet.appendRow(row);
-
   if (parseInt(data.tabSwitches) > 0) {
     sheet.getRange(sheet.getLastRow(), 1, 1, row.length).setBackground('#FFF3E0');
   }
-
   return { status: 'ok' };
 }
 
 // =================================================================
-// ADMIN -- GET ALL SUBMISSIONS
+// EVALUATION (upsert by submissionId)
 // =================================================================
-function handleGetSubmissions() {
+function handleEvaluation(data) {
   var ss = getOrCreateSS();
-  var all = [];
-  var tids = [1, 2, 3, 4];
-  for (var t = 0; t < tids.length; t++) {
-    var tid = tids[t];
-    var sheet = ss.getSheetByName(TAB['T' + tid]);
-    if (!sheet) continue;
-    var rows = sheetToObjects(sheet);
-    for (var i = 0; i < rows.length; i++) {
-      var r = rows[i];
-      all.push({
-        rowId:       r['Row ID'] || '',
-        testId:      tid,
-        testTitle:   r['Test'] || '',
-        name:        r['Name'] || '',
-        email:       r['Email'] || '',
-        phone:       r['Phone'] || '',
-        submittedAt: r['Submitted At'] || '',
-        timeTaken:   r['Time Taken (sec)'] || 0,
-        autoSubmit:  r['Auto Submit'] === 'Yes',
-        tabSwitches: parseInt(r['Tab Switches']) || 0,
-      });
-    }
+  var headers = ['Submission ID', 'Evaluated At', 'Name', 'Email', 'Phone',
+                 'Test ID', 'Test Title', 'Total Score', 'Max Score',
+                 'Percentage', 'Grade', 'Overall Comment', 'Scores JSON',
+                 'Comments JSON', 'Tab Switches', 'Auto Submit'];
+  var sheet = getOrCreateTab(ss, TAB.EVALS, headers);
+
+  var subId = String(data.submissionId || '').trim();
+  if (!subId) return { status: 'error', message: 'submissionId required' };
+
+  var testId = parseInt(data.testId);
+  var qIds = Q_IDS[testId] || [];
+  var scores = {}, comments = {};
+  qIds.forEach(function (qid, i) {
+    if (data['Q' + (i + 1) + '_score']   !== undefined && data['Q' + (i + 1) + '_score']   !== '') scores[qid]   = data['Q' + (i + 1) + '_score'];
+    if (data['Q' + (i + 1) + '_comment'] !== undefined && data['Q' + (i + 1) + '_comment'] !== '') comments[qid] = data['Q' + (i + 1) + '_comment'];
+  });
+
+  var row = [
+    subId,
+    data.evaluatedAt || new Date().toLocaleString('en-IN'),
+    data.name || '',
+    String(data.email || '').toLowerCase().trim(),
+    data.phone || '',
+    testId,
+    data.testTitle || '',
+    data.totalScore || 0,
+    data.maxScore || 0,
+    data.percentage || 0,
+    data.grade || '',
+    data.overallComment || '',
+    JSON.stringify(scores),
+    JSON.stringify(comments),
+    data.tabSwitches || 0,
+    data.autoSubmit || 'No',
+  ];
+
+  var existingRow = findRowByMatch(sheet, function (r) {
+    return String(r['Submission ID'] || '').trim() === subId;
+  });
+  if (existingRow > 0) {
+    sheet.getRange(existingRow, 1, 1, row.length).setValues([row]);
+  } else {
+    sheet.appendRow(row);
   }
-  all.sort(function(a, b) { return String(b.rowId).localeCompare(String(a.rowId)); });
-  return { status: 'ok', submissions: all };
+  return { status: 'ok' };
 }
 
 // =================================================================
-// ADMIN -- GET ALL CANDIDATES (includes passwords)
+// REATTEMPT GRANT
 // =================================================================
-function handleGetCandidates() {
+function handleReattempt(data, status) {
   var ss = getOrCreateSS();
-  var sheet = ss.getSheetByName(TAB.USERS);
-  if (!sheet) return { status: 'ok', candidates: [] };
+  var headers = ['Email', 'Test ID', 'Status', 'Updated At'];
+  var sheet = getOrCreateTab(ss, TAB.REATTEMPTS, headers);
 
-  var users = sheetToObjects(sheet);
-  var result = [];
-  for (var i = 0; i < users.length; i++) {
-    var u = users[i];
-    var email = (u['Email'] || '').toLowerCase();
-    result.push({
-      id:           u['ID'] || '',
-      name:         u['Name'] || '',
-      email:        email,
-      phone:        u['Phone'] || '',
-      password:     u['Password'] || '',    // Shown in admin Candidates tab
-      registeredAt: u['Registered At'] || '',
-      completed:    getCompletedTests(ss, email),
-    });
+  var email = String(data.email || '').toLowerCase().trim();
+  var testId = parseInt(data.testId);
+  if (!email || !testId) return { status: 'error', message: 'email + testId required' };
+
+  var row = [email, testId, status, new Date().toLocaleString('en-IN')];
+  var existingRow = findRowByMatch(sheet, function (r) {
+    return String(r['Email'] || '').toLowerCase().trim() === email
+      && parseInt(r['Test ID']) === testId;
+  });
+  if (existingRow > 0) {
+    sheet.getRange(existingRow, 1, 1, row.length).setValues([row]);
+  } else {
+    sheet.appendRow(row);
   }
-  return { status: 'ok', candidates: result };
+  return { status: 'ok' };
 }
 
 // =================================================================
-// ADMIN -- GET FULL DETAIL FOR ONE SUBMISSION
+// RESET TEST — delete one candidate's submission for one test
 // =================================================================
-function handleGetDetail(params) {
-  var testId = parseInt(params.testId);
-  var email  = (params.email || '').toLowerCase();
-  if (!testId || !email) return { status: 'error', message: 'Missing testId or email' };
-
+function handleResetTest(data) {
   var ss = getOrCreateSS();
+  var testId = parseInt(data.testId);
+  var email = String(data.email || '').toLowerCase().trim();
+  if (!email || !testId) return { status: 'error', message: 'email + testId required' };
+
   var sheet = ss.getSheetByName(TAB['T' + testId]);
-  if (!sheet) return { status: 'error', message: 'No submissions for this test yet.' };
-
-  var data = sheet.getDataRange().getValues();
-  if (data.length < 2) return { status: 'error', message: 'No data found.' };
-
-  var headers = data[0];
-  var emailIdx = -1;
-  for (var h = 0; h < headers.length; h++) {
-    if (headers[h] === 'Email') { emailIdx = h; break; }
+  if (sheet) {
+    var r = findRowByMatch(sheet, function (row) {
+      return String(row['Email'] || '').toLowerCase().trim() === email;
+    });
+    if (r > 0) sheet.deleteRow(r);
   }
 
-  var rowData = null;
-  for (var i = 1; i < data.length; i++) {
-    if (data[i][emailIdx] && data[i][emailIdx].toString().toLowerCase() === email) {
-      rowData = data[i];
-      break;
+  var evalSheet = ss.getSheetByName(TAB.EVALS);
+  if (evalSheet) {
+    var er = findRowByMatch(evalSheet, function (row) {
+      return String(row['Email'] || '').toLowerCase().trim() === email
+        && parseInt(row['Test ID']) === testId;
+    });
+    if (er > 0) evalSheet.deleteRow(er);
+  }
+  return { status: 'ok' };
+}
+
+// =================================================================
+// BULK DELETE USERS (+ all their submissions + their evaluations)
+// =================================================================
+function handleDeleteUsers(data) {
+  var emails = (data.emails || []).map(function (e) {
+    return String(e || '').toLowerCase().trim();
+  }).filter(function (e) { return !!e; });
+  if (!emails.length) return { status: 'error', message: 'No emails provided' };
+
+  var emailSet = {};
+  emails.forEach(function (e) { emailSet[e] = true; });
+
+  var ss = getOrCreateSS();
+  var sheetsToClean = [TAB.USERS, TAB.EVALS, TAB.REATTEMPTS, TAB.T1, TAB.T2, TAB.T3, TAB.T4];
+  var deleted = 0;
+
+  sheetsToClean.forEach(function (tabName) {
+    var sh = ss.getSheetByName(tabName);
+    if (!sh) return;
+    var data = sh.getDataRange().getValues();
+    if (data.length < 2) return;
+    var headers = data[0];
+    var emailIdx = -1;
+    for (var h = 0; h < headers.length; h++) if (headers[h] === 'Email') { emailIdx = h; break; }
+    if (emailIdx < 0) return;
+    // Walk bottom-up so row indexes stay stable while deleting
+    for (var i = data.length - 1; i >= 1; i--) {
+      var em = String(data[i][emailIdx] || '').toLowerCase().trim();
+      if (emailSet[em]) { sh.deleteRow(i + 1); deleted++; }
     }
-  }
-  if (!rowData) return { status: 'error', message: 'Submission not found.' };
+  });
+  return { status: 'ok', deleted: deleted };
+}
 
-  var obj = {};
-  for (var k = 0; k < headers.length; k++) { obj[headers[k]] = rowData[k]; }
+// =================================================================
+// SYNC — return everything the admin needs
+// =================================================================
+function handleSync() {
+  var ss = getOrCreateSS();
 
-  var answers = {};
-  var qh = Q_HEADERS[testId] || [];
-  for (var q = 0; q < qh.length; q++) {
-    answers['Q' + (q + 1)] = obj['Q' + (q + 1) + ': ' + qh[q]] || '';
-  }
+  // Users
+  var users = [];
+  var usersSheet = ss.getSheetByName(TAB.USERS);
+  sheetToObjects(usersSheet).forEach(function (u) {
+    var em = String(u['Email'] || '').toLowerCase().trim();
+    if (!em) return;
+    users.push({
+      name:      u['Name'] || '',
+      email:     em,
+      phone:     u['Phone'] || '',
+      createdAt: u['Created At'] || '',
+    });
+  });
+
+  // Submissions (with answers re-keyed by q.id so the frontend slots them correctly)
+  var submissions = [];
+  [1, 2, 3, 4].forEach(function (testId) {
+    var sheet = ss.getSheetByName(TAB['T' + testId]);
+    if (!sheet) return;
+    var qIds = Q_IDS[testId] || [];
+
+    // Build a position -> header-key map ONCE per sheet, robust to any header
+    // format the spreadsheet might have ('Q1', 'Q1:1a', 'Q1: Question text', ...).
+    var headerRow = sheet.getRange(1, 1, 1, sheet.getLastColumn()).getValues()[0];
+    var keyByQNum = {};
+    headerRow.forEach(function (h) {
+      var m = String(h || '').match(/^Q(\d+)\b/);
+      if (m) keyByQNum[parseInt(m[1])] = h;
+    });
+
+    sheetToObjects(sheet).forEach(function (r) {
+      var email = String(r['Email'] || '').toLowerCase().trim();
+      if (!email) return;
+      var answers = {};
+      qIds.forEach(function (qid, i) {
+        var headerKey = keyByQNum[i + 1];
+        var v = headerKey ? r[headerKey] : '';
+        answers[qid] = v == null ? '' : String(v);
+      });
+      submissions.push({
+        id:          r['Row ID'] || '',
+        name:        r['Name'] || '',
+        email:       email,
+        phone:       r['Phone'] || '',
+        testId:      testId,
+        testTitle:   r['Test'] || ('Test ' + testId),
+        submittedAt: r['Submitted At'] || '',
+        timeTaken:   parseInt(r['Time Taken (sec)']) || 0,
+        autoSubmit:  String(r['Auto Submit']) === 'Yes',
+        tabSwitches: parseInt(r['Tab Switches']) || 0,
+        answers:     answers,
+      });
+    });
+  });
+
+  // Evaluations
+  var evaluations = [];
+  var evalSheet = ss.getSheetByName(TAB.EVALS);
+  sheetToObjects(evalSheet).forEach(function (e) {
+    var scores = {}, comments = {};
+    try { scores = JSON.parse(e['Scores JSON'] || '{}'); } catch (_) {}
+    try { comments = JSON.parse(e['Comments JSON'] || '{}'); } catch (_) {}
+    evaluations.push({
+      submissionId:   String(e['Submission ID'] || ''),
+      scores:         scores,
+      comments:       comments,
+      overallComment: e['Overall Comment'] || '',
+    });
+  });
+
+  // Reattempts
+  var reattempts = [];
+  var raSheet = ss.getSheetByName(TAB.REATTEMPTS);
+  sheetToObjects(raSheet).forEach(function (r) {
+    reattempts.push({
+      email:  String(r['Email'] || '').toLowerCase().trim(),
+      testId: parseInt(r['Test ID']) || 0,
+      status: r['Status'] || 'inactive',
+    });
+  });
 
   return {
     status: 'ok',
-    detail: {
-      name:        obj['Name'],
-      email:       obj['Email'],
-      phone:       obj['Phone'],
-      testId:      testId,
-      testTitle:   obj['Test'],
-      submittedAt: obj['Submitted At'],
-      timeTaken:   obj['Time Taken (sec)'],
-      autoSubmit:  obj['Auto Submit'] === 'Yes',
-      tabSwitches: parseInt(obj['Tab Switches']) || 0,
-      answers:     answers,
-      notes:       obj['Notes'] || '',
-    },
+    users: users,
+    submissions: submissions,
+    evaluations: evaluations,
+    reattempts: reattempts,
   };
-}
-
-// =================================================================
-// ADMIN -- SAVE EVALUATOR NOTES
-// =================================================================
-function handleSaveNotes(data) {
-  var testId = parseInt(data.testId);
-  var email  = (data.email || '').toLowerCase();
-  var ss = getOrCreateSS();
-  var sheet = ss.getSheetByName(TAB['T' + testId]);
-  if (!sheet) return { status: 'error', message: 'Sheet not found.' };
-
-  var allData  = sheet.getDataRange().getValues();
-  var headers  = allData[0];
-  var emailIdx = -1, notesIdx = -1;
-  for (var h = 0; h < headers.length; h++) {
-    if (headers[h] === 'Email') emailIdx = h;
-    if (headers[h] === 'Notes') notesIdx = h;
-  }
-  if (notesIdx < 0) return { status: 'error', message: 'Notes column not found.' };
-
-  for (var i = 1; i < allData.length; i++) {
-    if (allData[i][emailIdx] && allData[i][emailIdx].toString().toLowerCase() === email) {
-      sheet.getRange(i + 1, notesIdx + 1).setValue(data.notes || '');
-      return { status: 'ok' };
-    }
-  }
-  return { status: 'error', message: 'Submission not found.' };
-}
-
-// =================================================================
-// FORGOT PASSWORD — looks up email, sends password via Gmail
-// =================================================================
-function handleForgotPassword(data) {
-  var email = (data.email || '').toLowerCase().trim();
-  if (!email) return { status: 'error', message: 'Please enter your email address.' };
-
-  var ss = getOrCreateSS();
-  var sheet = ss.getSheetByName(TAB.USERS);
-  if (!sheet) return { status: 'error', message: 'No accounts found. Please register first.' };
-
-  var rows = sheetToObjects(sheet);
-  var user = null;
-  for (var i = 0; i < rows.length; i++) {
-    if (rows[i]['Email'] && rows[i]['Email'].toString().toLowerCase() === email) {
-      user = rows[i];
-      break;
-    }
-  }
-
-  if (!user) return { status: 'error', message: 'No account found with this email address.' };
-
-  // Send password via email
-  try {
-    var subject = 'Educart BDM Portal — Your Password';
-    var body =
-      'Hello ' + (user['Name'] || 'there') + ',\n\n' +
-      'You requested your password for the Educart BDM Assessment Portal.\n\n' +
-      'Your password is: ' + (user['Password'] || '(not set)') + '\n\n' +
-      'If you did not request this, please ignore this email.\n\n' +
-      '— Educart Assessment Team';
-    MailApp.sendEmail(email, subject, body);
-    return { status: 'ok', message: 'Password has been sent to your email address.' };
-  } catch (err) {
-    return { status: 'error', message: 'Could not send email. Please contact the admin.' };
-  }
-}
-
-// =================================================================
-// RESET PASSWORD — verifies email + phone, then sets new password
-// =================================================================
-function handleResetPassword(data) {
-  var email = (data.email || '').toLowerCase().trim();
-  var phone = (data.phone || '').trim();
-  var newPass = data.newPass || '';
-
-  if (!email) return { status: 'error', message: 'Please enter your email address.' };
-  if (!phone) return { status: 'error', message: 'Please enter your phone number.' };
-  if (newPass.length < 6) return { status: 'error', message: 'New password must be at least 6 characters.' };
-
-  var ss = getOrCreateSS();
-  var sheet = ss.getSheetByName(TAB.USERS);
-  if (!sheet) return { status: 'error', message: 'No accounts found. Please register first.' };
-
-  var allData = sheet.getDataRange().getValues();
-  var headers = allData[0];
-  var emailIdx = -1, phoneIdx = -1, passIdx = -1;
-  for (var h = 0; h < headers.length; h++) {
-    if (headers[h] === 'Email') emailIdx = h;
-    if (headers[h] === 'Phone') phoneIdx = h;
-    if (headers[h] === 'Password') passIdx = h;
-  }
-  if (passIdx < 0) return { status: 'error', message: 'Password column not found in sheet.' };
-
-  for (var i = 1; i < allData.length; i++) {
-    var rowEmail = (allData[i][emailIdx] || '').toString().toLowerCase();
-    var rowPhone = (allData[i][phoneIdx] || '').toString().trim();
-    // Normalize phone: strip spaces, dashes, +91 prefix for comparison
-    var normInput = phone.replace(/[\s\-\+]/g, '').replace(/^91/, '');
-    var normRow = rowPhone.replace(/[\s\-\+]/g, '').replace(/^91/, '');
-
-    if (rowEmail === email && normRow === normInput) {
-      sheet.getRange(i + 1, passIdx + 1).setValue(newPass);
-      return { status: 'ok', message: 'Password has been reset successfully. You can now sign in.' };
-    }
-  }
-
-  return { status: 'error', message: 'Email and phone number do not match any account.' };
 }

@@ -154,6 +154,18 @@ body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--text);min
 .admin-search{flex:1;padding:10px 14px;border:1px solid var(--border2);border-radius:var(--radius-sm);font-family:'DM Sans',sans-serif;font-size:14px;background:var(--surface);outline:none;transition:border-color .2s}
 .admin-search:focus{border-color:var(--brand2);box-shadow:0 0 0 3px rgba(45,106,79,.1)}
 
+/* ── BULK-SELECT BAR ── */
+.bulk-bar{background:var(--brand);color:#fff;border-radius:var(--radius);padding:.75rem 1.25rem;margin-bottom:12px;display:flex;align-items:center;gap:12px;flex-wrap:wrap}
+.bulk-bar-count{font-size:13px;font-weight:600}
+.bulk-bar-sub{font-size:12px;color:rgba(255,255,255,.6)}
+.bulk-bar-btn{padding:7px 14px;border-radius:var(--radius-sm);font-family:'DM Sans',sans-serif;font-size:13px;font-weight:500;cursor:pointer;border:none;transition:all .2s;margin-left:auto}
+.bulk-bar-btn-danger{background:var(--red);color:#fff}
+.bulk-bar-btn-danger:hover{background:#9d2f23}
+.bulk-bar-btn-ghost{background:rgba(255,255,255,.1);color:#fff;border:1px solid rgba(255,255,255,.25)}
+.bulk-bar-btn-ghost:hover{background:rgba(255,255,255,.2)}
+.cc-checkbox{width:18px;height:18px;flex-shrink:0;cursor:pointer;accent-color:var(--brand2)}
+.candidate-card.selected{border-color:var(--brand2);background:rgba(45,106,79,.05)}
+
 /* ── CANDIDATE CARD (new) ── */
 .candidate-card{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:1.25rem;margin-bottom:10px;cursor:pointer;transition:all .2s;display:flex;align-items:center;gap:1rem}
 .candidate-card:hover{border-color:var(--brand2);box-shadow:0 4px 16px rgba(26,58,42,.08);transform:translateY(-1px)}
@@ -541,9 +553,10 @@ body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--text);min
     <div class="done-sub" id="done-sub">Your responses have been recorded.</div>
     <div class="done-stats">
       <div class="done-stat"><div class="done-stat-val" id="done-answered">0</div><div class="done-stat-lbl">Answered</div></div>
-      <div class="done-stat"><div class="done-stat-val" id="done-time">0m</div><div class="done-stat-lbl">Time taken</div></div>
+      <div class="done-stat"><div class="done-stat-val" id="done-time">0m 0s</div><div class="done-stat-lbl">Time taken</div></div>
       <div class="done-stat"><div class="done-stat-val" id="done-flags">0</div><div class="done-stat-lbl">Violations</div></div>
     </div>
+    <div style="font-size:13px;color:var(--text3);margin-bottom:1.25rem">Submitted at <span id="done-submitted-at" style="color:var(--text2);font-weight:500">—</span></div>
     <button class="btn-primary" id="btn-back-dash" style="margin-top:0">← Back to Dashboard</button>
   </div>
 </div>
@@ -619,6 +632,7 @@ let S = {
   user:null, test:null, qIdx:0, answers:{}, startTime:null,
   timerInt:null, timeLeft:0, tabSwitches:0, adminAuthed:false,
   adminActiveTab: 'candidates', candidateSearch: '',
+  selectedCandidates: new Set(),
 };
 
 // ═══════════════════════════════════════════════
@@ -639,28 +653,50 @@ function stableId(email, testId, submittedAt) {
 // ═══════════════════════════════════════════════
 // DATE FORMATTING & DATA NORMALIZATION
 // ═══════════════════════════════════════════════
-// Returns a date formatted as dd/mm/yyyy from whatever string / number we got.
+// Parse the various stamp formats we might encounter into a Date.
 // Accepts: millis timestamps, ISO strings, `new Date().toString()` output,
-// `toLocaleString('en-IN')` output, etc.
+// en-IN locale string ("21/4/2026, 1:39:31 pm"), etc.
+function parseStamp(v) {
+  if (v == null || v === '') return null;
+  if (v instanceof Date) return v;
+  if (typeof v === 'number') return new Date(v);
+  const s = String(v).trim();
+  if (/^\d{10,}$/.test(s)) return new Date(+s); // pure ms timestamp
+  // en-IN: "21/4/2026, 1:39:31 pm" or "21/4/2026"
+  const m = s.match(/^(\d{1,2})\/(\d{1,2})\/(\d{4})(?:,?\s+(\d{1,2}):(\d{2})(?::(\d{2}))?\s*(am|pm)?)?$/i);
+  if (m) {
+    let [_, dd, mo, yyyy, hh, mm, ss, ap] = m;
+    let h = hh ? parseInt(hh, 10) : 0;
+    if (ap) {
+      ap = ap.toLowerCase();
+      if (ap === 'pm' && h < 12) h += 12;
+      if (ap === 'am' && h === 12) h = 0;
+    }
+    return new Date(+yyyy, +mo - 1, +dd, h, mm ? +mm : 0, ss ? +ss : 0);
+  }
+  const d = new Date(s);
+  return isNaN(d.getTime()) ? null : d;
+}
+
+// dd/mm/yyyy
 function fmtDate(v) {
   if (v == null || v === '') return '—';
-  let d;
-  if (typeof v === 'number') d = new Date(v);
-  else if (/^\d{10,}$/.test(String(v).trim())) d = new Date(+v); // pure ms timestamp
-  else {
-    // Try en-IN "21/4/2026, 1:39:31 pm" first
-    const m = String(v).match(/^(\d{1,2})\/(\d{1,2})\/(\d{4})/);
-    if (m) {
-      const [_, dd, mm, yyyy] = m;
-      return `${dd.padStart(2,'0')}/${mm.padStart(2,'0')}/${yyyy}`;
-    }
-    d = new Date(v);
-  }
-  if (isNaN(d.getTime())) return String(v); // give up, show raw
+  const d = parseStamp(v);
+  if (!d) return String(v);
+  return `${String(d.getDate()).padStart(2,'0')}/${String(d.getMonth()+1).padStart(2,'0')}/${d.getFullYear()}`;
+}
+
+// dd/mm/yyyy HH:MM (24-hour) — for submission timestamps where the time of day matters
+function fmtDateTime(v) {
+  if (v == null || v === '') return '—';
+  const d = parseStamp(v);
+  if (!d) return String(v);
   const dd   = String(d.getDate()).padStart(2,'0');
   const mm   = String(d.getMonth()+1).padStart(2,'0');
   const yyyy = d.getFullYear();
-  return `${dd}/${mm}/${yyyy}`;
+  const hh   = String(d.getHours()).padStart(2,'0');
+  const mn   = String(d.getMinutes()).padStart(2,'0');
+  return `${dd}/${mm}/${yyyy} ${hh}:${mn}`;
 }
 
 // Some historic submission rows in the sheet were written with an extra ID
@@ -722,30 +758,68 @@ async function syncFromSheet() {
     const data = await res.json();
     if (data.status !== 'ok') throw new Error(data.message || 'Sync failed');
 
-    // ── 1. Merge users (keep local passwords) ──
-    // First: migrate any local users with mixed-case emails → lowercase
-    // so they match the lowercased emails from the sheet.
+    // ── 1. Reconcile users — sheet is the source of truth ──
+    //    Drop local users that no longer exist in the sheet (so manual sheet
+    //    deletions actually propagate). Keep local passwords for users that
+    //    still exist by matching on email.
     const localUsers = getUsers().map(u => ({
       ...u,
       email: String(u.email || '').toLowerCase().trim(),
     }));
-    const sheetUsers  = data.users || [];
-    const mergedUsers = [...localUsers];
-    sheetUsers.forEach(su => {
-      const suEmail = String(su.email || '').toLowerCase().trim();
-      const existing = mergedUsers.find(u => u.email === suEmail);
-      if (!existing) mergedUsers.push({ ...su, email: suEmail, pass: '' });
+    const localByEmail = {};
+    localUsers.forEach(u => { if (u.email) localByEmail[u.email] = u; });
+    const sheetUsers = data.users || [];
+    const sheetEmailSet = new Set();
+    const mergedUsers = sheetUsers.map(su => {
+      const email = String(su.email || '').toLowerCase().trim();
+      sheetEmailSet.add(email);
+      const local = localByEmail[email];
+      return {
+        id:        (local && local.id) || email,
+        fname:     (local && local.fname) || (su.name || '').split(' ')[0] || '',
+        lname:     (local && local.lname) || (su.name || '').split(' ').slice(1).join(' ') || '',
+        name:      su.name || (local && local.name) || email,
+        email,
+        phone:     su.phone || (local && local.phone) || '',
+        pass:      (local && local.pass) || '',
+        createdAt: su.createdAt || (local && local.createdAt) || '',
+      };
     });
     saveUsers(mergedUsers);
+    // Drop the active session if its user just disappeared from the sheet
+    const sess = getSession();
+    if (sess && sess.email && !sheetEmailSet.has(String(sess.email).toLowerCase())) {
+      clearSession();
+      S.user = null;
+    }
 
     // ── 2. Re-key all sheet submissions to stableId ──
     //    First normalize any legacy column-shifted rows, then compute id from
     //    the corrected fields so everything downstream gets clean data.
+    //    Also re-key answers from whatever the sheet returned (Q1/Q2 numeric
+    //    keys, or already-correct q.id keys) into the q.id keys the UI uses.
     const sheetSubs = (data.submissions || []).map(raw => {
       const s = normalizeShiftedSubmission(raw);
       const email = String(s.email || '').toLowerCase().trim();
       const id = stableId(email, s.testId, s.submittedAt);
-      return { ...s, email, id };
+      const t = TESTS.find(x => x.id === parseInt(s.testId));
+      const rawAns = s.answers || {};
+      const answers = {};
+      if (t) {
+        t.questions.forEach((q, i) => {
+          // Accept any of: answers[q.id], answers['Q1'], answers['Q1:1a'], answers[i]
+          const candidates = [
+            rawAns[q.id],
+            rawAns['Q' + (i + 1)],
+            rawAns['Q' + (i + 1) + ':' + q.id],
+            rawAns[i],
+            rawAns[String(i)],
+          ];
+          const hit = candidates.find(v => v !== undefined && v !== null && v !== '');
+          answers[q.id] = hit == null ? '' : String(hit);
+        });
+      }
+      return { ...s, email, id, testId: parseInt(s.testId), answers };
     });
 
     // ── 3. Build evaluation map keyed by stableId ──
@@ -792,10 +866,14 @@ async function syncFromSheet() {
       seenKeys.add(k);
     });
 
-    // Keep local-only records (just submitted, not yet synced)
+    // Keep local-only records (just submitted, not yet synced) —
+    // BUT only if their user still exists in the sheet. This drops stale
+    // local submissions for candidates that were removed from the sheet.
     localSubs.forEach(r => {
       const k = `${r.email}|${r.testId}|${r.submittedAt}`;
-      if (!seenKeys.has(k)) merged.push(r);
+      if (seenKeys.has(k)) return;
+      if (!sheetEmailSet.has(r.email)) return;
+      merged.push(r);
     });
 
     saveResponses(merged);
@@ -1036,7 +1114,8 @@ async function doSubmit(auto){
   }
   const all=getResponses(); all.push(rec); saveResponses(all);
   $('done-answered').textContent=answeredCount;
-  $('done-time').textContent=Math.round(elapsed/60)+'m';
+  $('done-time').textContent=`${Math.floor(elapsed/60)}m ${elapsed%60}s`;
+  $('done-submitted-at').textContent=fmtDateTime(submittedAt);
   $('done-flags').textContent=S.tabSwitches;
   $('done-sub').textContent=auto?'Time ran out — your answers were auto-submitted.':'Your responses have been recorded.';
   showScreen('screen-done');
@@ -1171,7 +1250,7 @@ function renderSubmissionsTab(){
     return `<div class="response-row">
       <div style="flex:1;min-width:0">
         <div class="resp-name">${escHtml(r.name)}</div>
-        <div class="resp-meta">${escHtml(r.email)} · ${fmtDate(r.submittedAt)}</div>
+        <div class="resp-meta">${escHtml(r.email)} · ${fmtDateTime(r.submittedAt)}</div>
       </div>
       <div style="display:flex;gap:6px;flex-wrap:wrap;align-items:center">
         <span class="tag tag-t${r.testId}">Test ${r.testId}</span>
@@ -1230,6 +1309,12 @@ function renderCandidatesTab(){
   const q = (S.candidateSearch||'').toLowerCase().trim();
   const filtered = q ? users.filter(u => (u.name||'').toLowerCase().includes(q) || (u.email||'').toLowerCase().includes(q) || (u.phone||'').includes(q)) : users;
 
+  // Drop stale selections (emails that are no longer in the filtered set)
+  const filteredEmailSet = new Set(filtered.map(u => u.email));
+  Array.from(S.selectedCandidates).forEach(em => {
+    if (!filteredEmailSet.has(em)) S.selectedCandidates.delete(em);
+  });
+
   const rows = filtered.map(u => {
     const recs = getResponses().filter(r => String(r.email||'').toLowerCase() === u.email);
     const submittedCount = TESTS.filter(t => recs.some(r => r.testId === t.id)).length;
@@ -1262,7 +1347,9 @@ function renderCandidatesTab(){
       return `<span class="cc-test-pill ${cls}" title="Test ${t.id}: ${t.title}">${label}</span>`;
     }).join('');
 
-    return `<div class="candidate-card" data-email="${escHtml(u.email)}">
+    const checked = S.selectedCandidates.has(u.email) ? 'checked' : '';
+    return `<div class="candidate-card ${checked?'selected':''}" data-email="${escHtml(u.email)}">
+      <input type="checkbox" class="cc-checkbox" data-email="${escHtml(u.email)}" ${checked}>
       <div class="cc-avatar">${initials(u.name)}</div>
       <div class="cc-info">
         <div class="cc-name">${escHtml(u.name)}</div>
@@ -1274,11 +1361,28 @@ function renderCandidatesTab(){
     </div>`;
   }).join('');
 
+  const selCount = S.selectedCandidates.size;
+  const allSelected = filtered.length > 0 && filtered.every(u => S.selectedCandidates.has(u.email));
+  const bulkBarHTML = selCount > 0 ? `
+    <div class="bulk-bar">
+      <div>
+        <div class="bulk-bar-count">${selCount} selected</div>
+        <div class="bulk-bar-sub">This removes the candidate and all their submissions everywhere.</div>
+      </div>
+      <button class="bulk-bar-btn bulk-bar-btn-ghost" id="bulk-clear">Clear</button>
+      <button class="bulk-bar-btn bulk-bar-btn-danger" id="bulk-delete">🗑 Delete ${selCount} candidate${selCount>1?'s':''}</button>
+    </div>` : '';
+
   c.innerHTML = `
     <div class="admin-search-row">
+      <label style="display:flex;align-items:center;gap:6px;font-size:12px;color:var(--text3);cursor:pointer;user-select:none">
+        <input type="checkbox" id="select-all-candidates" ${allSelected?'checked':''} style="width:16px;height:16px;cursor:pointer;accent-color:var(--brand2)">
+        Select all
+      </label>
       <input class="admin-search" id="candidate-search" placeholder="🔍 Search by name, email, or phone..." value="${escHtml(S.candidateSearch||'')}">
       <div style="font-size:12px;color:var(--text3);white-space:nowrap">${filtered.length} of ${users.length}</div>
     </div>
+    ${bulkBarHTML}
     ${rows || '<div class="empty-state"><p>No candidates match your search.</p></div>'}
   `;
 
@@ -1291,9 +1395,88 @@ function renderCandidatesTab(){
     setTimeout(()=>{ const el=$('candidate-search'); if(el){ el.focus(); el.setSelectionRange(el.value.length, el.value.length);} }, 0);
   };
 
-  c.querySelectorAll('.candidate-card').forEach(card => {
-    card.onclick = () => renderCandidateDetailView(card.dataset.email);
+  // Select-all toggle
+  const selAllEl = $('select-all-candidates');
+  if (selAllEl) {
+    selAllEl.onclick = (e) => {
+      if (e.target.checked) filtered.forEach(u => S.selectedCandidates.add(u.email));
+      else                  filtered.forEach(u => S.selectedCandidates.delete(u.email));
+      renderCandidatesTab();
+    };
+  }
+  if ($('bulk-clear'))  $('bulk-clear').onclick  = () => { S.selectedCandidates.clear(); renderCandidatesTab(); };
+  if ($('bulk-delete')) $('bulk-delete').onclick = () => confirmBulkDeleteCandidates();
+
+  // Per-row checkbox (stop propagation so clicking it doesn't open detail)
+  c.querySelectorAll('.cc-checkbox').forEach(cb => {
+    cb.onclick = (e) => {
+      e.stopPropagation();
+      const em = cb.dataset.email;
+      if (cb.checked) S.selectedCandidates.add(em);
+      else            S.selectedCandidates.delete(em);
+      renderCandidatesTab();
+    };
   });
+
+  c.querySelectorAll('.candidate-card').forEach(card => {
+    card.onclick = (e) => {
+      // Don't open detail view when the click came from inside the checkbox
+      if (e.target.classList && e.target.classList.contains('cc-checkbox')) return;
+      renderCandidateDetailView(card.dataset.email);
+    };
+  });
+}
+
+// ═══════════════════════════════════════════════
+// BULK DELETE CANDIDATES
+// ═══════════════════════════════════════════════
+function confirmBulkDeleteCandidates(){
+  const emails = Array.from(S.selectedCandidates);
+  if (!emails.length) return;
+  showModal(
+    `Delete ${emails.length} candidate${emails.length>1?'s':''}?`,
+    `This permanently removes ${emails.length===1 ? 'this candidate' : 'these candidates'}, all their submissions, evaluations, and reattempt grants — everywhere (local + Google Sheet). This cannot be undone.`,
+    () => doBulkDeleteCandidates(emails),
+    { confirmText: `Yes, delete ${emails.length===1?'candidate':'all'}`, cancelText: 'Cancel', danger: true }
+  );
+}
+
+async function doBulkDeleteCandidates(emails){
+  const set = new Set(emails.map(e => String(e||'').toLowerCase().trim()));
+  loading(true, `Deleting ${emails.length} candidate${emails.length>1?'s':''}…`);
+  try {
+    // 1. Tell the sheet to remove them everywhere (await so sync doesn't repopulate)
+    if (GOOGLE_SCRIPT_URL !== 'YOUR_GOOGLE_APPS_SCRIPT_URL_HERE') {
+      await fetch(GOOGLE_SCRIPT_URL, {
+        method: 'POST',
+        body: JSON.stringify({ type: 'delete_users', emails: Array.from(set) })
+      });
+    }
+
+    // 2. Clean local users, submissions, and reattempt grants
+    saveUsers(getUsers().filter(u => !set.has(String(u.email||'').toLowerCase().trim())));
+    saveResponses(getResponses().filter(r => !set.has(String(r.email||'').toLowerCase().trim())));
+    const grants = reattemptGrants || getReattemptGrants();
+    Object.keys(grants).forEach(k => {
+      const em = k.split(':')[0];
+      if (set.has(em)) delete grants[k];
+    });
+    saveReattemptGrants(grants);
+    reattemptGrants = grants;
+
+    // 3. Sign out if the current session belongs to a deleted user
+    const sess = getSession();
+    if (sess && set.has(String(sess.email||'').toLowerCase())) {
+      clearSession();
+      S.user = null;
+    }
+
+    S.selectedCandidates.clear();
+  } catch (e) {
+    console.warn('Bulk delete had issues:', e);
+  }
+  loading(false);
+  renderAdmin();
 }
 
 // ═══════════════════════════════════════════════
@@ -1370,7 +1553,7 @@ function renderCandidateDetailView(email){
           </div>
           <div class="cd-test-bar"><div class="cd-test-bar-fill" style="width:${pct}%"></div></div>
         ` : ''}
-        <div class="cd-test-row"><span class="cd-test-row-lbl">Submitted</span><span class="cd-test-row-val">${fmtDate(rec.submittedAt)}</span></div>
+        <div class="cd-test-row"><span class="cd-test-row-lbl">Submitted</span><span class="cd-test-row-val">${fmtDateTime(rec.submittedAt)}</span></div>
         <div class="cd-test-row"><span class="cd-test-row-lbl">Time Taken</span><span class="cd-test-row-val">${timeStr}${rec.autoSubmit?' (auto)':''}</span></div>
         <div class="cd-test-row"><span class="cd-test-row-lbl">Violations</span><span class="cd-test-row-val" style="color:${rec.tabSwitches>0?'var(--red)':'var(--green)'}">${rec.tabSwitches>0?rec.tabSwitches+' detected':'None'}</span></div>
       `;
@@ -1541,13 +1724,13 @@ function renderEvalDetail(rid){
       <button class="btn-exit" id="btn-back-list" style="background:transparent;border-color:var(--border2);color:var(--text)">← Back</button>
       <div style="flex:1;min-width:0">
         <div style="font-weight:600;font-size:15px;line-height:1.2">${escHtml(r.name)} — ${escHtml(r.testTitle)}</div>
-        <div style="font-size:12px;color:var(--text3);margin-top:2px">${fmtDate(r.submittedAt)}</div>
+        <div style="font-size:12px;color:var(--text3);margin-top:2px">${fmtDateTime(r.submittedAt)}</div>
       </div>
       <span class="tag ${r.tabSwitches>0?'tag-flag':'tag-clean'}">${r.tabSwitches>0?r.tabSwitches+' violation(s)':'Clean'}</span>
     </div>
     <div class="detail-body">
       <div class="detail-meta-card">
-        <div><div class="dm-item-lbl">Submitted</div><div class="dm-item-val">${fmtDate(r.submittedAt)}</div></div>
+        <div><div class="dm-item-lbl">Submitted</div><div class="dm-item-val">${fmtDateTime(r.submittedAt)}</div></div>
         <div><div class="dm-item-lbl">Time Taken</div><div class="dm-item-val">${Math.round(r.timeTaken/60)}m ${r.timeTaken%60}s${r.autoSubmit?' (auto)':''}</div></div>
         <div><div class="dm-item-lbl">Email</div><div class="dm-item-val">${escHtml(r.email)}</div></div>
         <div><div class="dm-item-lbl">Phone</div><div class="dm-item-val">${escHtml(r.phone||'—')}</div></div>

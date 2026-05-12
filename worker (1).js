@@ -1,5 +1,11 @@
 // Cloudflare Worker — Educart BDM Assessment Proxy
-// Replace the URL below with your Google Apps Script URL
+//
+// Forwards GET ?action=... and POST { type: ... } requests through to the
+// Google Apps Script web app, adding CORS headers so the static frontend can
+// call us cross-origin.
+//
+// After redeploying google-apps-script (3).js as a NEW VERSION, copy the new
+// /exec URL here and redeploy this worker. The /exec URL changes per version.
 
 const GAS_URL = 'https://script.google.com/macros/s/AKfycbzuMFjSr5novapEcuQ9WIeAd4CD-HglYIYfQcO83KpwtQXUxvC4qmJ6aMQHsdu7bAcm/exec';
 
